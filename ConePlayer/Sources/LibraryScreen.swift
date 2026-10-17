@@ -27,6 +27,7 @@ struct LibraryScreen: View {
         switch section {
         case .videos: library.videos
         case .music: library.music
+        case .home: library.videos + library.music
         case .recent: history.recentItems
         case .network: history.recentItems.filter(\.isStream)
         case .playlists: openPlaylist.map { playlists.items(in: $0.id) } ?? []
@@ -62,6 +63,11 @@ struct LibraryScreen: View {
     /// True for the top level of Playlists, which lists playlists instead of files.
     private var showsPlaylistList: Bool {
         section == .playlists && openPlaylist == nil && query.isEmpty
+    }
+
+    /// Home shows its own rows; while searching it searches Videos and Music.
+    private var showsHome: Bool {
+        section == .home && query.isEmpty
     }
 
     /// Case-, accent- and separator-insensitive form, so "sync test" finds "sync-test.mp4".
@@ -107,9 +113,11 @@ struct LibraryScreen: View {
             }
             Breadcrumb()
             Spacer()
-            Text("^[\(showsPlaylistList ? playlists.playlists.count : items.count + folders.count) item](inflect: true)")
-                .font(.inter(14))
-                .foregroundStyle(Theme.textMuted)
+            if !showsHome {
+                Text("^[\(showsPlaylistList ? playlists.playlists.count : items.count + folders.count) item](inflect: true)")
+                    .font(.inter(14))
+                    .foregroundStyle(Theme.textMuted)
+            }
 
             if let playlist = openPlaylist, !items.isEmpty {
                 IconButton("play", label: "Play All") { play(items[0]) }
@@ -125,7 +133,7 @@ struct LibraryScreen: View {
                     .focusEffectDisabled()
             }
 
-            if !showsPlaylistList {
+            if !showsPlaylistList && !showsHome {
                 Menu {
                     Picker("Sort By", selection: $sort) {
                         ForEach(Sort.allCases, id: \.self) { Text(sortTitle($0)) }
@@ -164,7 +172,9 @@ struct LibraryScreen: View {
     // MARK: Content
 
     @ViewBuilder private var content: some View {
-        if showsPlaylistList {
+        if showsHome {
+            HomeView()
+        } else if showsPlaylistList {
             PlaylistList()
         } else if items.isEmpty && folders.isEmpty {
             ContentUnavailableView {
@@ -207,6 +217,7 @@ struct LibraryScreen: View {
         if library.isScanning && section.hasFolders { return "Scanning…" }
         if !query.isEmpty { return "No Results" }
         switch section {
+        case .home: return "No Results"
         case .recent: return "No Recent Items"
         case .network: return "No Network Streams"
         case .playlists: return "Empty Playlist"
@@ -219,6 +230,7 @@ struct LibraryScreen: View {
         switch section {
         case .videos: return "Add files to your Movies folder, drop a file here, or use Add item."
         case .music: return "Add files to your Music folder, drop a file here, or use Add item."
+        case .home: return "Nothing matches."
         case .recent: return "Files you play show up here."
         case .network: return "Choose File › Open Network Stream… (⌘N) or the + button to play a URL."
         case .playlists: return "Right-click a file and choose Add to Playlist."
@@ -421,7 +433,7 @@ private struct SearchField: View {
 
 // MARK: - Items
 
-private struct Thumbnail: View {
+struct Thumbnail: View {
     let item: MediaItem
     var cornerRadius: CGFloat = 12
     @Environment(ThumbnailStore.self) private var thumbnails
@@ -441,7 +453,7 @@ private struct Thumbnail: View {
         }
         .clipShape(.rect(cornerRadius: cornerRadius))
         // Streams have no local file for Quick Look to preview.
-        .task(id: item.url) { if !item.isStream { await thumbnails.load(item.url) } }
+        .task(id: item.url) { if !item.isStream { await thumbnails.load(item) } }
         .accessibilityHidden(true)
     }
 }
@@ -452,7 +464,7 @@ private func nameColor(isCurrent: Bool, entry: PlaybackHistory.Entry?) -> Color 
     return entry?.isFinished == true ? Theme.textMuted : Theme.textPrimary
 }
 
-private struct MediaCard: View {
+struct MediaCard: View {
     let item: MediaItem
     let isCurrent: Bool
     let action: () -> Void

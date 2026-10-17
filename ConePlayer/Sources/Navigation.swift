@@ -1,6 +1,7 @@
 import Observation
 
 enum LibrarySection: String, CaseIterable, Identifiable {
+    case home = "Home"
     case videos = "Videos"
     case music = "Music"
     case network = "Network"
@@ -11,6 +12,7 @@ enum LibrarySection: String, CaseIterable, Identifiable {
 
     var systemImage: String {
         switch self {
+        case .home: "house"
         case .videos: "play.rectangle"
         case .music: "music.note"
         case .network: "dot.radiowaves.left.and.right"
@@ -31,7 +33,7 @@ final class Navigation {
 
     var screen: Screen = .library
     /// Switching section returns to its top level and clears folder history.
-    var section: LibrarySection = .videos {
+    var section: LibrarySection = .home {
         didSet {
             folderPath = []
             backStack = []

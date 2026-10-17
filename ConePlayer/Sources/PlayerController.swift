@@ -264,13 +264,19 @@ final class PlayerController {
         if player.state == .error {
             errorMessage = "Playback failed."
         } else if hasStarted && !isPlaying && player.state != .paused && player.state != .opening {
-            // Reached the end of the file.
             hasStarted = false
-            if let current { history.markFinished(current) }
-            if hasNext && settings.autoPlayNext {
-                next()
+            // VLC also stops when a file or stream fails part-way. Only a stop near the
+            // end (or the end of a live stream, which has no length) counts as finished.
+            let reachedEnd = duration == .zero || player.position >= 0.9 || duration - elapsed < .seconds(3)
+            if reachedEnd {
+                if let current, duration > .zero { history.markFinished(current) }
+                if hasNext && settings.autoPlayNext {
+                    next()
+                } else {
+                    isAtEnd = true
+                }
             } else {
-                isAtEnd = true
+                errorMessage = "Playback stopped unexpectedly. The file may be damaged or the stream unavailable."
             }
         }
         refreshMetadata()

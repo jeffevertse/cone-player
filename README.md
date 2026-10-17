@@ -18,6 +18,7 @@ Cone Player is an independent project. It is not affiliated with or endorsed by 
 
 - Plays any video or audio file VLC can play (File › Open, drag and drop, or Open With in Finder)
 - Network streams: File › Open Network Stream… (⌘N) for http(s), HLS, rtsp, rtmp, udp, srt and more; the Network section lists recent streams
+- Home: Continue Watching, Recently Added and your playlists at a glance
 - Library of videos and music from `~/Movies` and `~/Music`, browsable by folder with a breadcrumb and back/forward, as a grid or list, with Quick Look thumbnails, sorting and search
 - Resume playback: remembers where you stopped, offers "You've watched till …" (or resumes automatically, per Settings), and shows progress bars and dimmed names for watched files
 - Recent: everything you've played, newest first, including files outside Movies/Music (kept reachable with security-scoped bookmarks)
@@ -28,7 +29,7 @@ Cone Player is an independent project. It is not affiliated with or endorsed by 
 - Settings (⌘,): continue where you left off (Ask/Always/Never), playback speed, jump interval, auto-play next, audio and subtitle delay, subtitle size, preferred audio/subtitle language, and VLC's 10-band equalizer with presets
 - Keyboard: Space play/pause, ⌘← / ⌘→ jump 10s, ⌥⌘← / ⌥⌘→ previous/next, ⌘1 Library, ⌘2 Player, ⌘[ / ⌘] back/forward, ⌘F search, ⌘N open stream, ⌘. stop
 
-Planned next: more Settings panes (video, interface, network), Home view, local network discovery, Light theme.
+Planned next: more Settings panes (video, interface, network), local network discovery, Light theme.
 
 ## Design notes
 
