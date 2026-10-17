@@ -8,6 +8,7 @@ struct LibraryScreen: View {
     @Environment(Navigation.self) private var navigation
     @Environment(PlaybackHistory.self) private var history
     @Environment(PlaylistStore.self) private var playlists
+    @Environment(NetworkBrowser.self) private var browser
     @State private var query = ""
     @State private var sort: Sort = .name
     /// Files waiting to go into a playlist that's being created.
@@ -70,6 +71,11 @@ struct LibraryScreen: View {
         section == .home && query.isEmpty
     }
 
+    /// Network shows servers and streams, or a server's folder, rather than the item grid.
+    private var showsNetwork: Bool {
+        section == .network && query.isEmpty
+    }
+
     /// Case-, accent- and separator-insensitive form, so "sync test" finds "sync-test.mp4".
     private static func searchKey(_ text: String) -> String {
         text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
@@ -113,7 +119,7 @@ struct LibraryScreen: View {
             }
             Breadcrumb()
             Spacer()
-            if !showsHome {
+            if !showsHome && !showsNetwork {
                 Text("^[\(showsPlaylistList ? playlists.playlists.count : items.count + folders.count) item](inflect: true)")
                     .font(.inter(14))
                     .foregroundStyle(Theme.textMuted)
@@ -133,7 +139,7 @@ struct LibraryScreen: View {
                     .focusEffectDisabled()
             }
 
-            if !showsPlaylistList && !showsHome {
+            if !showsPlaylistList && !showsHome && !showsNetwork {
                 Menu {
                     Picker("Sort By", selection: $sort) {
                         ForEach(Sort.allCases, id: \.self) { Text(sortTitle($0)) }
@@ -174,6 +180,13 @@ struct LibraryScreen: View {
     @ViewBuilder private var content: some View {
         if showsHome {
             HomeView()
+        } else if showsNetwork {
+            if let last = navigation.folderPath.last, let url = URL(string: last) {
+                NetworkFolder(url: url) { item, queue in playQueued(item, queue) }
+            } else {
+                NetworkHome(streams: items) { item, queue in playQueued(item, queue) }
+                    .onAppear { browser.start() }
+            }
         } else if showsPlaylistList {
             PlaylistList()
         } else if items.isEmpty && folders.isEmpty {
@@ -278,7 +291,11 @@ struct LibraryScreen: View {
     }
 
     private func play(_ item: MediaItem) {
-        player.play(item, in: items)
+        playQueued(item, items)
+    }
+
+    private func playQueued(_ item: MediaItem, _ queue: [MediaItem]) {
+        player.play(item, in: queue)
         navigation.screen = .player
     }
 }
@@ -303,11 +320,19 @@ struct Folder: Identifiable {
 private struct Breadcrumb: View {
     @Environment(Navigation.self) private var navigation
     @Environment(PlaylistStore.self) private var playlists
+    @Environment(NetworkBrowser.self) private var browser
 
-    /// Folder names as-is; in Playlists the path holds a playlist id.
+    /// Folder names as-is; Playlists' path holds playlist ids and Network's holds URLs.
     private func title(_ component: String) -> String {
-        guard navigation.section == .playlists, let id = UUID(uuidString: component) else { return component }
-        return playlists.playlist(id)?.name ?? "Playlist"
+        switch navigation.section {
+        case .playlists:
+            guard let id = UUID(uuidString: component) else { return component }
+            return playlists.playlist(id)?.name ?? "Playlist"
+        case .network:
+            return browser.names[component] ?? URL(string: component)?.host() ?? component
+        default:
+            return component
+        }
     }
 
     var body: some View {

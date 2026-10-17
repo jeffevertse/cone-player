@@ -34,6 +34,8 @@ targets:
       properties:
         CFBundleDisplayName: Cone Player
         ATSApplicationFontsPath: Fonts
+        NSLocalNetworkUsageDescription: Cone Player looks for media servers and shared folders on your network so you can play their videos and music.
+        NSBonjourServices: [_smb._tcp, _afpovertcp._tcp, _nfs._tcp, _ftp._tcp, _sftp-ssh._tcp, _daap._tcp, _rtsp._tcp, _http._tcp]
         LSApplicationCategoryType: public.app-category.entertainment
         CFBundleDocumentTypes:
           - CFBundleTypeName: Media
@@ -49,4 +51,6 @@ targets:
         com.apple.security.assets.movies.read-only: true
         com.apple.security.assets.music.read-only: true
         com.apple.security.network.client: true
+        # UPnP discovery listens for replies from media servers.
+        com.apple.security.network.server: true
         com.apple.security.cs.disable-library-validation: true

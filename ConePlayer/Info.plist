@@ -40,5 +40,18 @@
 	<string>1</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.entertainment</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_smb._tcp</string>
+		<string>_afpovertcp._tcp</string>
+		<string>_nfs._tcp</string>
+		<string>_ftp._tcp</string>
+		<string>_sftp-ssh._tcp</string>
+		<string>_daap._tcp</string>
+		<string>_rtsp._tcp</string>
+		<string>_http._tcp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Cone Player looks for media servers and shared folders on your network so you can play their videos and music.</string>
 </dict>
 </plist>
