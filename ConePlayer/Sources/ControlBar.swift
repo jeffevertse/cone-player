@@ -9,9 +9,9 @@ struct ControlBar: View {
         HStack(spacing: 20) {
             HStack(spacing: 8) {
                 IconButton("backward.end.fill", label: "Previous") { player.previous() }
-                IconButton("gobackward.10", label: "Back 10 Seconds") { player.skip(by: -10) }
+                IconButton("gobackward.\(player.settings.jumpInterval)", label: "Back \(player.settings.jumpInterval) Seconds") { player.jumpBack() }
                 PlayButton()
-                IconButton("goforward.10", label: "Forward 10 Seconds") { player.skip(by: 10) }
+                IconButton("goforward.\(player.settings.jumpInterval)", label: "Forward \(player.settings.jumpInterval) Seconds") { player.jumpForward() }
                 IconButton("forward.end.fill", label: "Next") { player.next() }
                     .disabled(!player.hasNext)
                     .opacity(player.hasNext ? 1 : 0.4)
@@ -150,8 +150,8 @@ struct ProgressTrack: View {
         .accessibilityValue("\(player.elapsed.clockString) of \(player.duration.clockString)")
         .accessibilityAdjustableAction { direction in
             switch direction {
-            case .increment: player.skip(by: 10)
-            case .decrement: player.skip(by: -10)
+            case .increment: player.jumpForward()
+            case .decrement: player.jumpBack()
             @unknown default: break
             }
         }

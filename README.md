@@ -19,9 +19,10 @@ Cone Player is an independent project. It is not affiliated with or endorsed by 
 - Floating miniplayer over the library with a live video preview
 - Player screens from the Figma: video, and "Player – Music" with blurred artwork and waveform progress bar
 - Control bar: previous/next through the library list, ±10s, play/pause, seek, VLC's 0–200% wedge volume, audio track and subtitle menus, queue
+- Settings (⌘,): playback speed, jump interval, auto-play next, audio and subtitle delay, subtitle size, preferred audio/subtitle language, and VLC's 10-band equalizer with presets
 - Keyboard: Space play/pause, ⌘← / ⌘→ jump 10s, ⌥⌘← / ⌥⌘→ previous/next, ⌘1 Library, ⌘2 Player, ⌘F search, ⌘. stop
 
-Planned next: Settings (EQ, subtitles, audio), playlists, network streams, recent items, Light theme.
+Planned next: more Settings panes (video, interface, network), playlists, network streams, recent items, Light theme.
 
 ## Design notes
 

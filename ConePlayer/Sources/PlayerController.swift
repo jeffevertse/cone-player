@@ -54,8 +54,12 @@ final class PlayerController {
     private var isAtEnd = false
     private var loadedArtworkURL: URL?
 
-    init() {
+    let settings: SettingsStore
+
+    init(settings: SettingsStore) {
+        self.settings = settings
         player.drawable = videoView
+        settings.onChange = { [weak self] in self?.applySettings() }
         startPolling()
     }
 
@@ -76,6 +80,12 @@ final class PlayerController {
         position = 0
         hasStarted = false
         isAtEnd = false
+        if !settings.preferredAudioLanguage.isEmpty {
+            media.addOption(":audio-language=\(settings.preferredAudioLanguage)")
+        }
+        if !settings.preferredSubtitleLanguage.isEmpty {
+            media.addOption(":sub-language=\(settings.preferredSubtitleLanguage)")
+        }
         player.media = media
         player.audio?.volume = Int32(volume.rounded())
         player.play()
@@ -92,6 +102,9 @@ final class PlayerController {
             player.play()
         }
     }
+
+    func jumpForward() { skip(by: settings.jumpInterval) }
+    func jumpBack() { skip(by: -settings.jumpInterval) }
 
     func skip(by seconds: Int) {
         guard current != nil else { return }
@@ -123,6 +136,20 @@ final class PlayerController {
     }
 
     private var index: Int? { current.flatMap { queue.firstIndex(of: $0) } }
+
+    // MARK: - Settings
+
+    /// Pushes the current settings into VLC. Delays and subtitle size only stick
+    /// once a file is playing, so this also runs when playback starts.
+    private func applySettings() {
+        player.rate = Float(settings.playbackRate)
+        player.currentAudioPlaybackDelay = settings.audioDelay * 1000
+        player.currentVideoSubTitleDelay = settings.subtitleDelay * 1000
+        player.currentSubTitleFontScale = Float(settings.subtitleScale)
+        player.equalizer = settings.isEqualizerEnabled
+            ? Equalizer.make(preamp: settings.equalizerPreamp, bands: settings.equalizerBands)
+            : nil
+    }
 
     // MARK: - Tracks
 
@@ -157,7 +184,10 @@ final class PlayerController {
     private func refresh() {
         guard current != nil else { return }
         isPlaying = player.isPlaying
-        if isPlaying { hasStarted = true }
+        if isPlaying && !hasStarted {
+            hasStarted = true
+            applySettings()
+        }
         duration = .milliseconds(Int(player.media?.length.intValue ?? 0))
         if isAtEnd {
             elapsed = .zero
@@ -171,7 +201,7 @@ final class PlayerController {
         } else if hasStarted && !isPlaying && player.state != .paused && player.state != .opening {
             // Reached the end of the file.
             hasStarted = false
-            if hasNext {
+            if hasNext && settings.autoPlayNext {
                 next()
             } else {
                 isAtEnd = true

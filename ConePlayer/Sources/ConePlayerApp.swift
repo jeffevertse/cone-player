@@ -3,10 +3,17 @@ import UniformTypeIdentifiers
 
 @main
 struct ConePlayerApp: App {
-    @State private var player = PlayerController()
+    @State private var settings: SettingsStore
+    @State private var player: PlayerController
     @State private var library = MediaLibrary()
     @State private var thumbnails = ThumbnailStore()
     @State private var navigation = Navigation()
+
+    init() {
+        let settings = SettingsStore()
+        _settings = State(initialValue: settings)
+        _player = State(initialValue: PlayerController(settings: settings))
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -53,14 +60,19 @@ struct ConePlayerApp: App {
                     .keyboardShortcut(.rightArrow, modifiers: [.command, .option])
                 Button("Previous") { player.previous() }
                     .keyboardShortcut(.leftArrow, modifiers: [.command, .option])
-                Button("Jump Forward 10s") { player.skip(by: 10) }
+                Button("Jump Forward \(settings.jumpInterval)s") { player.jumpForward() }
                     .keyboardShortcut(.rightArrow, modifiers: .command)
-                Button("Jump Back 10s") { player.skip(by: -10) }
+                Button("Jump Back \(settings.jumpInterval)s") { player.jumpBack() }
                     .keyboardShortcut(.leftArrow, modifiers: .command)
                 Divider()
                 Button("Stop") { player.stop(); navigation.screen = .library }
                     .keyboardShortcut(".")
             }
+        }
+
+        Settings {
+            SettingsView()
+                .environment(settings)
         }
     }
 
