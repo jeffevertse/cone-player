@@ -485,7 +485,7 @@ struct Thumbnail: View {
 
 /// Name color: orange while playing, dimmed once watched (as in the Figma).
 private func nameColor(isCurrent: Bool, entry: PlaybackHistory.Entry?) -> Color {
-    if isCurrent { return Theme.accent }
+    if isCurrent { return Theme.accentText }
     return entry?.isFinished == true ? Theme.textMuted : Theme.textPrimary
 }
 
@@ -516,7 +516,7 @@ struct MediaCard: View {
                         if isHovering {
                             Image(systemName: "play.fill")
                                 .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(.black)
+                                .foregroundStyle(Theme.onAccent)
                                 .frame(width: 54, height: 28)
                                 .background(Theme.accent, in: .rect(cornerRadius: 6))
                         }

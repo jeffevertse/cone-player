@@ -87,7 +87,6 @@ struct SettingsView: View {
         .containerBackground(Theme.canvas, for: .window)
         .toolbar(removing: .title)
         .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
-        .preferredColorScheme(.dark)
         .tint(Theme.accent)
         .font(.inter(14))
         .foregroundStyle(Theme.textSecondary)
@@ -107,14 +106,14 @@ struct SettingsView: View {
                     HStack(spacing: 8) {
                         Image(systemName: item.systemImage)
                             .font(.system(size: 16))
-                            .foregroundStyle(isSelected ? Theme.accent : Theme.textSecondary)
+                            .foregroundStyle(isSelected ? Theme.accentText : Theme.textSecondary)
                             .frame(width: 32, height: 32)
                         Text(item.rawValue)
-                            .foregroundStyle(isSelected ? Color(hex: 0xEAEAEA) : Theme.textSecondary)
+                            .foregroundStyle(isSelected ? Theme.selectedText : Theme.textSecondary)
                         Spacer(minLength: 0)
                     }
                     .padding(4)
-                    .background(isSelected ? Color(hex: 0x222222) : .clear, in: .rect(cornerRadius: 2))
+                    .background(isSelected ? Theme.selectedFill : .clear, in: .rect(cornerRadius: 2))
                     .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
@@ -239,6 +238,11 @@ private struct InterfacePane: View {
 
     var body: some View {
         @Bindable var settings = settings
+        SettingsSection("Appearance") {
+            SettingsRow("Theme", info: "Dark is the original design; System follows macOS.") {
+                SegmentedValues(selection: $settings.appearance, options: SettingsStore.Appearance.allCases) { $0.rawValue }
+            }
+        }
         SettingsSection("Library") {
             SettingsRow("Start screen", info: "What the library shows when Cone Player opens.") {
                 Dropdown(
@@ -409,7 +413,7 @@ private struct OnOffToggle: View {
                 if isOn {
                     Text("ON")
                         .font(.inter(12))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentText)
                         .frame(width: 33, height: 26)
                         .background(Theme.accentWell, in: .rect(cornerRadius: 3))
                     RoundedRectangle(cornerRadius: 3).fill(Theme.accentDim).frame(width: 26, height: 26)
@@ -469,7 +473,7 @@ private struct Dropdown<Value: Hashable>: View {
                             isOpen = false
                         } label: {
                             Text(title)
-                                .foregroundStyle(value == selection ? Theme.accent : Theme.textSecondary)
+                                .foregroundStyle(value == selection ? Theme.accentText : Theme.textSecondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 12)
                                 .frame(height: 32)
@@ -631,7 +635,7 @@ private struct SegmentedValues<Value: Hashable>: View {
                 let isSelected = option == selection
                 Button { selection = option } label: {
                     Text(title(option))
-                        .foregroundStyle(isSelected ? Theme.accent : Theme.textSecondary)
+                        .foregroundStyle(isSelected ? Theme.accentText : Theme.textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 32)
                         .background(isSelected ? Theme.accentWell : Theme.panel, in: .rect(cornerRadius: 4))
@@ -661,7 +665,7 @@ private struct DelayField: View {
             .accessibilityLabel("Decrease \(label)")
             Text("\(milliseconds) ms")
                 .monospacedDigit()
-                .foregroundStyle(milliseconds == 0 ? Theme.textSecondary : Theme.accent)
+                .foregroundStyle(milliseconds == 0 ? Theme.textSecondary : Theme.accentText)
                 .frame(maxWidth: .infinity)
                 .onTapGesture(count: 2) { milliseconds = 0 }
                 .help("Double-click to reset")

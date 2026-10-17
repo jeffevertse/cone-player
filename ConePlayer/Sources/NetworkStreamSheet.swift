@@ -41,7 +41,7 @@ struct NetworkStreamSheet: View {
                 if let problem {
                     Text(problem)
                         .font(.inter(12))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentText)
                 }
             }
 
@@ -84,7 +84,7 @@ struct NetworkStreamSheet: View {
                 Button(action: open) {
                     Text("Open")
                         .font(.inter(14, .semibold))
-                        .foregroundStyle(Color(hex: 0x161616))
+                        .foregroundStyle(Theme.onAccent)
                         .padding(.horizontal, 20)
                         .frame(height: 32)
                         .background(Theme.accent, in: .rect(cornerRadius: 6))
@@ -96,7 +96,6 @@ struct NetworkStreamSheet: View {
         .padding(24)
         .frame(width: 560)
         .background(Theme.bar)
-        .preferredColorScheme(.dark)
         .onAppear {
             // Prefill from the clipboard when it holds a stream URL, as VLC does.
             if let text = NSPasteboard.general.string(forType: .string), Self.streamURL(from: text) != nil {

@@ -155,7 +155,7 @@ struct PlaylistNameSheet: View {
                 Button(action: confirm) {
                     Text(confirmTitle)
                         .font(.inter(14, .semibold))
-                        .foregroundStyle(Color(hex: 0x161616))
+                        .foregroundStyle(Theme.onAccent)
                         .padding(.horizontal, 16)
                         .frame(height: 32)
                         .background(Theme.accent, in: .rect(cornerRadius: 6))
@@ -167,7 +167,6 @@ struct PlaylistNameSheet: View {
         .padding(24)
         .frame(width: 420)
         .background(Theme.bar)
-        .preferredColorScheme(.dark)
         .onAppear {
             name = initialName
             isFocused = true

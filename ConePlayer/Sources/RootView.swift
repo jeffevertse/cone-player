@@ -103,7 +103,7 @@ struct AppMark: View {
     var body: some View {
         Image(systemName: "play.fill")
             .font(.system(size: 9, weight: .heavy))
-            .foregroundStyle(.black)
+            .foregroundStyle(Theme.onAccent)
             .frame(width: 18, height: 18)
             .background(Theme.accent, in: .rect(cornerRadius: 5))
             .padding(.horizontal, 7)
@@ -170,7 +170,7 @@ private struct Sidebar: View {
             HStack(spacing: 8) {
                 Image(systemName: systemImage)
                     .font(.system(size: 14))
-                    .foregroundStyle(isSelected ? Theme.accent : Theme.textSecondary)
+                    .foregroundStyle(isSelected ? Theme.accentText : Theme.textSecondary)
                     .frame(width: 30, height: 32)
                 Text(title)
                     .font(.inter(14, isSelected ? .medium : .regular))

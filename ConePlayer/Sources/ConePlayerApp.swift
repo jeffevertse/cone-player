@@ -37,8 +37,10 @@ struct ConePlayerApp: App {
                 .environment(settings)
                 .environment(networkBrowser)
                 .environment(dialogs)
-                .task { dialogs.attach(to: [player.vlcLibrary, VLCLibrary.shared()]) }
-                .preferredColorScheme(.dark)
+                .task {
+                    settings.applyAppearance()
+                    dialogs.attach(to: [player.vlcLibrary, VLCLibrary.shared()])
+                }
                 .tint(Theme.accent)
                 .frame(minWidth: 960, minHeight: 600)
                 .fileImporter(

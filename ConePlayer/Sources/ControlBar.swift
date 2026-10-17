@@ -241,7 +241,7 @@ private struct QueueList: View {
                     Button { player.play(item) } label: {
                         Text(item.fileName)
                             .font(.inter(14))
-                            .foregroundStyle(item == player.current ? Theme.accent : Theme.textPrimary)
+                            .foregroundStyle(item == player.current ? Theme.accentText : Theme.textPrimary)
                             .lineLimit(1)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 12)

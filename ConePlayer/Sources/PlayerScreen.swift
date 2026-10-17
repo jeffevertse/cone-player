@@ -55,7 +55,7 @@ private struct MusicView: View {
                     cover
                         .aspectRatio(1, contentMode: .fit)
                         .frame(width: max(side, 160), height: max(side, 160))
-                        .background(Color(hex: 0x090909))
+                        .background(Theme.well)
                         .clipShape(.rect(cornerRadius: 20))
                         .shadow(color: .black.opacity(0.6), radius: 40, y: 20)
                     Spacer(minLength: 40)
@@ -77,7 +77,7 @@ private struct MusicView: View {
             Image(nsImage: artwork).resizable()
         } else {
             ZStack {
-                Color(hex: 0x090909)
+                Theme.well
                 ForEach([0.3, 0.5, 0.7], id: \.self) { scale in
                     Circle()
                         .strokeBorder(Theme.separator.opacity(1.2 - scale), lineWidth: 1.5)
@@ -101,7 +101,7 @@ private struct ResumeBanner: View {
             Button { player.acceptResume() } label: {
                 Text("Continue Watching")
                     .font(.inter(14, .semibold))
-                    .foregroundStyle(Color(hex: 0x161616))
+                    .foregroundStyle(Theme.onAccent)
                     .padding(.horizontal, 8)
                     .frame(height: 32)
                     .background(Theme.accent, in: .rect(cornerRadius: 6))

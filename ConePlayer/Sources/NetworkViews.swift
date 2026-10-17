@@ -34,7 +34,7 @@ struct NetworkHome: View {
                         Button("Open Network Stream…") { navigation.isOpeningStream = true }
                             .buttonStyle(.plain)
                             .font(.inter(14))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentText)
                             .focusEffectDisabled()
                     }
                     if streams.isEmpty {

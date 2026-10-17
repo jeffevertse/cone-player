@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import Observation
 import VLCKit
 
@@ -23,6 +23,12 @@ final class SettingsStore {
         case fill = "Fill window"
         case width = "Fit width"
         case height = "Fit height"
+    }
+
+    enum Appearance: String, CaseIterable {
+        case system = "System"
+        case dark = "Dark"
+        case light = "Light"
     }
 
     enum LibraryLayout: String, CaseIterable {
@@ -84,6 +90,23 @@ final class SettingsStore {
 
     // MARK: Interface
 
+    /// Dark by default, as designed; Light and System are options.
+    var appearance: Appearance = .dark {
+        didSet {
+            changed("appearance", appearance.rawValue)
+            applyAppearance()
+        }
+    }
+
+    /// Sets the whole app's appearance, including Settings and sheets.
+    func applyAppearance() {
+        switch appearance {
+        case .system: NSApp?.appearance = nil
+        case .dark: NSApp?.appearance = NSAppearance(named: .darkAqua)
+        case .light: NSApp?.appearance = NSAppearance(named: .aqua)
+        }
+    }
+
     var startScreen: LibrarySection = .home { didSet { changed("startScreen", startScreen.rawValue) } }
     var libraryLayout: LibraryLayout = .grid { didSet { changed("libraryLayout", libraryLayout.rawValue) } }
     var showsMiniplayer = true { didSet { changed("showsMiniplayer", showsMiniplayer) } }
@@ -133,6 +156,7 @@ final class SettingsStore {
         saturation = defaults.object(forKey: "saturation") as? Double ?? saturation
         hue = defaults.object(forKey: "hue") as? Double ?? hue
         gamma = defaults.object(forKey: "gamma") as? Double ?? gamma
+        appearance = defaults.string(forKey: "appearance").flatMap(Appearance.init(rawValue:)) ?? .dark
         startScreen = defaults.string(forKey: "startScreen").flatMap(LibrarySection.init(rawValue:)) ?? .home
         libraryLayout = defaults.string(forKey: "libraryLayout").flatMap(LibraryLayout.init(rawValue:)) ?? .grid
         showsMiniplayer = defaults.object(forKey: "showsMiniplayer") as? Bool ?? showsMiniplayer

@@ -58,7 +58,6 @@ struct VLCDialogSheet: View {
         .padding(24)
         .frame(width: 440)
         .background(Theme.bar)
-        .preferredColorScheme(.dark)
         .font(.inter(14))
     }
 
@@ -70,7 +69,7 @@ struct VLCDialogSheet: View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: icon)
                 .font(.system(size: 20))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentText)
                 .frame(width: 28)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 6) {
@@ -116,7 +115,7 @@ struct VLCDialogSheet: View {
         Button(action: action) {
             Text(title)
                 .font(.inter(14, .semibold))
-                .foregroundStyle(Color(hex: 0x161616))
+                .foregroundStyle(Theme.onAccent)
                 .padding(.horizontal, 16)
                 .frame(height: 32)
                 .background(Theme.accent, in: .rect(cornerRadius: 6))

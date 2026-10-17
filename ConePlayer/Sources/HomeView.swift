@@ -57,7 +57,7 @@ struct HomeView: View {
             Button("See All") { navigation.section = seeAll }
                 .buttonStyle(.plain)
                 .font(.inter(14))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentText)
                 .focusEffectDisabled()
         }
     }
@@ -92,7 +92,7 @@ struct HomeView: View {
                         } label: {
                             HStack(spacing: 10) {
                                 Image(systemName: "list.triangle")
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentText)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(playlist.name)
                                         .font(.inter(14, .medium))
@@ -121,7 +121,7 @@ struct HomeView: View {
         VStack(spacing: 20) {
             Image(systemName: "play.fill")
                 .font(.system(size: 28, weight: .heavy))
-                .foregroundStyle(.black)
+                .foregroundStyle(Theme.onAccent)
                 .frame(width: 72, height: 72)
                 .background(Theme.accent, in: .rect(cornerRadius: 18))
                 .accessibilityHidden(true)
@@ -142,7 +142,7 @@ struct HomeView: View {
         Button(action: action) {
             Text(title)
                 .font(.inter(14, .semibold))
-                .foregroundStyle(primary ? Color(hex: 0x161616) : Theme.textSecondary)
+                .foregroundStyle(primary ? Theme.onAccent : Theme.textSecondary)
                 .padding(.horizontal, 16)
                 .frame(height: 32)
                 .background(primary ? Theme.accent : Theme.panel, in: .rect(cornerRadius: 6))

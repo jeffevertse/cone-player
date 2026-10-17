@@ -31,7 +31,7 @@ struct Miniplayer: View {
                     if player.errorMessage != nil {
                         Label("Can't read this file", systemImage: "exclamationmark.triangle")
                             .font(.inter(14))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentText)
                             .lineLimit(1)
                             .help(player.errorMessage ?? "")
                     } else if let folder = player.current?.folderName {
@@ -74,7 +74,7 @@ struct PlayButton: View {
         Button { player.togglePlayPause() } label: {
             Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                 .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(Color(hex: 0x161616))
+                .foregroundStyle(Theme.onAccent)
                 .frame(width: 54, height: 28)
                 .background(Theme.accent, in: .rect(cornerRadius: 6))
                 .contentShape(.rect)
