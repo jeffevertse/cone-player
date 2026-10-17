@@ -36,7 +36,7 @@ struct RootView: View {
             if item == nil { navigation.screen = .library }
         }
         .dropDestination(for: URL.self) { urls, _ in
-            let items = urls.compactMap(MediaItem.init(url:))
+            let items = urls.compactMap { MediaItem(url: $0) }
             guard let first = items.first else { return false }
             player.play(first, in: items)
             navigation.screen = .player

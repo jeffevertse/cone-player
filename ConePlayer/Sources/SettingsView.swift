@@ -116,6 +116,13 @@ private struct PlaybackPane: View {
     var body: some View {
         @Bindable var settings = settings
         SettingsSection("Startup") {
+            SettingsRow("Continue where you left off", info: "For files you stopped part-way through.") {
+                Dropdown(
+                    selection: $settings.resumeMode,
+                    options: SettingsStore.ResumeMode.allCases.map { ($0, $0.rawValue) },
+                    label: "Continue where you left off"
+                )
+            }
             SettingsRow("Default playback speed", info: "Applies to everything you play.") {
                 NotchedSlider(
                     value: $settings.playbackRate,

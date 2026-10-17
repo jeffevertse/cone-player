@@ -34,6 +34,6 @@ final class MediaLibrary {
             includingPropertiesForKeys: [.isRegularFileKey],
             options: [.skipsHiddenFiles, .skipsPackageDescendants]
         ) else { return [] }
-        return enumerator.compactMap { ($0 as? URL).flatMap(MediaItem.init(url:)) }
+        return enumerator.compactMap { ($0 as? URL).flatMap { MediaItem(url: $0, root: root) } }
     }
 }

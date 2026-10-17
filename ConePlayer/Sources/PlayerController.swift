@@ -18,6 +18,8 @@ final class PlayerController {
     private(set) var elapsed: Duration = .zero
     private(set) var duration: Duration = .zero
     private(set) var errorMessage: String?
+    /// Set while the "You've watched till …" banner offers to resume.
+    private(set) var resumeOffer: Duration?
 
     /// "Artist - Title" from the file's metadata, falling back to the file name.
     private(set) var displayTitle = ""
@@ -53,20 +55,32 @@ final class PlayerController {
     /// Set when the last item finishes, so the bar shows 00:00:00 instead of VLC's final position.
     private var isAtEnd = false
     private var loadedArtworkURL: URL?
+    /// Elapsed time when progress was last saved, to save every few seconds.
+    private var lastSaved: Duration = .zero
+    private var terminationObserver: (any NSObjectProtocol)?
 
     let settings: SettingsStore
+    let history: PlaybackHistory
 
-    init(settings: SettingsStore) {
+    init(settings: SettingsStore, history: PlaybackHistory) {
         self.settings = settings
+        self.history = history
         player.drawable = videoView
         settings.onChange = { [weak self] in self?.applySettings() }
         startPolling()
+        // Save the exact position on quit, not just the last 5-second checkpoint.
+        terminationObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.saveProgress() }
+        }
     }
 
     // MARK: - Commands
 
     /// Plays `item`; `queue` is the list that previous/next walk through.
     func play(_ item: MediaItem, in queue: [MediaItem]? = nil) {
+        saveProgress()
         guard let media = VLCMedia(url: item.url) else {
             errorMessage = "Cone Player can't open \(item.fileName)."
             return
@@ -80,6 +94,18 @@ final class PlayerController {
         position = 0
         hasStarted = false
         isAtEnd = false
+        lastSaved = .zero
+        resumeOffer = nil
+        if let resumePoint = history.resumePoint(for: item) {
+            switch settings.resumeMode {
+            case .always:
+                media.addOption(":start-time=\(resumePoint.components.seconds)")
+            case .ask:
+                resumeOffer = resumePoint
+            case .never:
+                break
+            }
+        }
         if !settings.preferredAudioLanguage.isEmpty {
             media.addOption(":audio-language=\(settings.preferredAudioLanguage)")
         }
@@ -129,7 +155,19 @@ final class PlayerController {
         }
     }
 
+    /// Jumps to where the file was left off, from the resume banner.
+    func acceptResume() {
+        guard let offer = resumeOffer else { return }
+        player.time = VLCTime(int: Int32(clamping: Int(offer.components.seconds) * 1000))
+        resumeOffer = nil
+    }
+
+    func dismissResume() {
+        resumeOffer = nil
+    }
+
     func stop() {
+        saveProgress()
         player.stop()
         current = nil
         queue = []
@@ -196,11 +234,19 @@ final class PlayerController {
             elapsed = .milliseconds(Int(player.time.intValue))
             if !isScrubbing { position = player.position }
         }
+        if isPlaying && (elapsed - lastSaved > .seconds(5) || elapsed < lastSaved) {
+            saveProgress()
+        }
+        // Hide the resume banner after a while, as VLC does.
+        if resumeOffer != nil && elapsed > .seconds(10) {
+            resumeOffer = nil
+        }
         if player.state == .error {
             errorMessage = "Playback failed."
         } else if hasStarted && !isPlaying && player.state != .paused && player.state != .opening {
             // Reached the end of the file.
             hasStarted = false
+            if let current { history.markFinished(current) }
             if hasNext && settings.autoPlayNext {
                 next()
             } else {
@@ -208,6 +254,16 @@ final class PlayerController {
             }
         }
         refreshMetadata()
+    }
+
+    private func saveProgress() {
+        guard let current, !isAtEnd, elapsed > .zero, duration > .zero else { return }
+        lastSaved = elapsed
+        history.record(
+            current,
+            seconds: Double(elapsed.components.seconds),
+            progress: elapsed / duration
+        )
     }
 
     private func refreshMetadata() {

@@ -17,6 +17,14 @@ struct PlayerScreen: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(.black)
+            .overlay(alignment: .bottom) {
+                if let offer = player.resumeOffer {
+                    ResumeBanner(time: offer)
+                        .padding(.bottom, 24)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.easeOut(duration: 0.25), value: player.resumeOffer)
 
             ControlBar()
         }
@@ -74,5 +82,46 @@ private struct MusicView: View {
                 }
             }
         }
+    }
+}
+
+/// The Figma's "You've watched till …" banner, shown when a file was stopped part-way.
+private struct ResumeBanner: View {
+    let time: Duration
+    @Environment(PlayerController.self) private var player
+
+    var body: some View {
+        HStack(spacing: 24) {
+            Text("You’ve watched till \(time.clockString) already.")
+                .font(.inter(16))
+                .foregroundStyle(Theme.textBright)
+            Button { player.acceptResume() } label: {
+                Text("Continue Watching")
+                    .font(.inter(14, .semibold))
+                    .foregroundStyle(Color(hex: 0x161616))
+                    .padding(.horizontal, 8)
+                    .frame(height: 32)
+                    .background(Theme.accent, in: .rect(cornerRadius: 6))
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .focusEffectDisabled()
+            .keyboardShortcut(.defaultAction)
+            Button { player.dismissResume() } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Theme.textMuted)
+                    .frame(width: 20, height: 20)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .focusEffectDisabled()
+            .accessibilityLabel("Start from the Beginning")
+        }
+        .padding(.leading, 20)
+        .padding(.trailing, 12)
+        .padding(.vertical, 10)
+        .background(Theme.panel.opacity(0.95), in: .rect(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.4), radius: 16, y: 6)
     }
 }

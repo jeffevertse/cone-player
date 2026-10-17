@@ -21,7 +21,40 @@ final class Navigation {
     enum Screen { case library, player }
 
     var screen: Screen = .library
-    var section: LibrarySection = .videos
+    /// Switching section returns to its top level and clears folder history.
+    var section: LibrarySection = .videos {
+        didSet {
+            folderPath = []
+            backStack = []
+            forwardStack = []
+        }
+    }
+    /// The folder shown in the library, relative to the section's top level.
+    private(set) var folderPath: [String] = []
+    private var backStack: [[String]] = []
+    private var forwardStack: [[String]] = []
+
+    var canGoBack: Bool { !backStack.isEmpty }
+    var canGoForward: Bool { !forwardStack.isEmpty }
+
+    func showFolder(_ path: [String]) {
+        guard path != folderPath else { return }
+        backStack.append(folderPath)
+        forwardStack = []
+        folderPath = path
+    }
+
+    func goBack() {
+        guard let previous = backStack.popLast() else { return }
+        forwardStack.append(folderPath)
+        folderPath = previous
+    }
+
+    func goForward() {
+        guard let next = forwardStack.popLast() else { return }
+        backStack.append(folderPath)
+        folderPath = next
+    }
     var isImporting = false
     var isSearchFocused = false
 }

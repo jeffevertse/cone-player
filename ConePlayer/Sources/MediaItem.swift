@@ -7,12 +7,15 @@ struct MediaItem: Identifiable, Hashable, Sendable {
     let url: URL
     let kind: Kind
     let dateAdded: Date
+    /// Folders between the library root (Movies or Music) and the file.
+    let folderPath: [String]
     var id: URL { url }
     var fileName: String { url.lastPathComponent }
     var title: String { url.deletingPathExtension().lastPathComponent }
     var folderName: String { url.deletingLastPathComponent().lastPathComponent }
 
-    init?(url: URL) {
+    /// `root` is the library folder the file was found in; files opened directly have none.
+    init?(url: URL, root: URL? = nil) {
         guard let type = UTType(filenameExtension: url.pathExtension.lowercased()) else { return nil }
         if type.conforms(to: .movie) || type.conforms(to: .video) {
             kind = .video
@@ -22,6 +25,12 @@ struct MediaItem: Identifiable, Hashable, Sendable {
             return nil
         }
         self.url = url
+        if let root {
+            let rootCount = root.standardizedFileURL.pathComponents.count
+            folderPath = Array(url.standardizedFileURL.deletingLastPathComponent().pathComponents.dropFirst(rootCount))
+        } else {
+            folderPath = []
+        }
         let values = try? url.resourceValues(forKeys: [.addedToDirectoryDateKey, .creationDateKey])
         dateAdded = values?.addedToDirectoryDate ?? values?.creationDate ?? .distantPast
     }

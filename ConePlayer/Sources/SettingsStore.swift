@@ -6,7 +6,16 @@ import VLCKit
 @MainActor
 @Observable
 final class SettingsStore {
+    enum ResumeMode: String, CaseIterable {
+        case ask = "Ask"
+        case always = "Always"
+        case never = "Never"
+    }
+
     // MARK: Playback
+
+    /// What to do when opening a file that was stopped part-way.
+    var resumeMode: ResumeMode = .ask { didSet { changed("resumeMode", resumeMode.rawValue) } }
 
     /// Playback speed, 0.25×–4×.
     var playbackRate: Double = 1 { didSet { changed("playbackRate", playbackRate) } }
@@ -48,6 +57,7 @@ final class SettingsStore {
         self.defaults = defaults
         isLoading = true
         defer { isLoading = false }
+        resumeMode = defaults.string(forKey: "resumeMode").flatMap(ResumeMode.init(rawValue:)) ?? .ask
         playbackRate = defaults.object(forKey: "playbackRate") as? Double ?? playbackRate
         jumpInterval = defaults.object(forKey: "jumpInterval") as? Int ?? jumpInterval
         autoPlayNext = defaults.object(forKey: "autoPlayNext") as? Bool ?? autoPlayNext

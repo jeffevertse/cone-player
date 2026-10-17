@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct ConePlayerApp: App {
     @State private var settings: SettingsStore
     @State private var player: PlayerController
+    @State private var history: PlaybackHistory
     @State private var library = MediaLibrary()
     @State private var thumbnails = ThumbnailStore()
     @State private var navigation = Navigation()
@@ -12,7 +13,9 @@ struct ConePlayerApp: App {
     init() {
         let settings = SettingsStore()
         _settings = State(initialValue: settings)
-        _player = State(initialValue: PlayerController(settings: settings))
+        let history = PlaybackHistory()
+        _history = State(initialValue: history)
+        _player = State(initialValue: PlayerController(settings: settings, history: history))
     }
 
     var body: some Scene {
@@ -22,6 +25,7 @@ struct ConePlayerApp: App {
                 .environment(library)
                 .environment(thumbnails)
                 .environment(navigation)
+                .environment(history)
                 .preferredColorScheme(.dark)
                 .tint(Theme.accent)
                 .frame(minWidth: 960, minHeight: 600)
