@@ -31,7 +31,7 @@ Cone Player is an independent project. It is not affiliated with or endorsed by 
 - Settings (⌘,): Interface (theme, start screen, grid/list, miniplayer), Video (fit, aspect ratio, deinterlace, color adjustments), Network (stream caching, keep streams in Recent), plus continue where you left off (Ask/Always/Never), playback speed, jump interval, auto-play next, audio and subtitle delay, subtitle size, preferred audio/subtitle language, and VLC's 10-band equalizer with presets
 - Keyboard: Space play/pause, ⌘← / ⌘→ jump 10s, ⌥⌘← / ⌥⌘→ previous/next, ⌘1 Library, ⌘2 Player, ⌘[ / ⌘] back/forward, ⌘F search, ⌘N open stream, ⌘. stop
 
-Planned next: remaining Settings panes (General, Privacy, Controls, Library, Performance, Recording).
+Planned next: remaining Settings panes (General, Privacy, Controls, Library, Performance, Recording), UI tests, Developer ID signing and notarization.
 
 ## Design notes
 
@@ -54,6 +54,16 @@ open ConePlayer.xcodeproj
 Then run the **ConePlayer** scheme. The Xcode project is generated from `project.yml`, so edit that rather than the project file.
 
 The app signs with an Apple Development certificate from team `2C39YHVFA2` (set in `project.yml`). A stable signature lets macOS remember the Movies/Music permission between builds. To build under another team, change `DEVELOPMENT_TEAM`.
+
+### Tests
+
+Unit tests (Swift Testing) cover the media item model, playback history and resume rules, playlists, settings persistence and equalizer presets, folder navigation and stream address validation. Run them with ⌘U in Xcode, or:
+
+```bash
+xcodebuild test -project ConePlayer.xcodeproj -scheme ConePlayer -destination 'platform=macOS'
+```
+
+Each test uses its own temporary preferences, so running them doesn't touch your history, playlists or settings.
 
 ### Notes
 

@@ -77,7 +77,7 @@ struct LibraryScreen: View {
     }
 
     /// Case-, accent- and separator-insensitive form, so "sync test" finds "sync-test.mp4".
-    private static func searchKey(_ text: String) -> String {
+    static func searchKey(_ text: String) -> String {
         text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
             .replacingOccurrences(of: "[-_.]+", with: " ", options: .regularExpression)
     }

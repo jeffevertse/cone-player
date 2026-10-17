@@ -54,3 +54,24 @@ targets:
         # UPnP discovery listens for replies from media servers.
         com.apple.security.network.server: true
         com.apple.security.cs.disable-library-validation: true
+  ConePlayerTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - ConePlayerTests
+    dependencies:
+      - target: ConePlayer
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  ConePlayer:
+    build:
+      targets:
+        ConePlayer: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - ConePlayerTests
