@@ -4,26 +4,34 @@ import SwiftUI
 struct SettingsView: View {
     enum Pane: String, CaseIterable, Identifiable, Codable {
         case interface = "Interface"
+        case privacy = "Privacy"
+        case controls = "Controls"
         case playback = "Playback"
         case video = "Video"
         case audio = "Audio"
         case subtitles = "Subtitles"
+        case library = "Library"
         case network = "Network"
+        case performance = "Performance"
 
         var id: Self { self }
 
         /// Sidebar group, as in the Figma: App, Media, System.
         var group: String {
             switch self {
-            case .interface: "App"
-            case .playback, .video, .audio, .subtitles: "Media"
-            case .network: "System"
+            case .interface, .privacy, .controls: "App"
+            case .playback, .video, .audio, .subtitles, .library: "Media"
+            case .network, .performance: "System"
             }
         }
 
         var title: String {
             switch self {
             case .interface: "Interface"
+            case .privacy: "Privacy"
+            case .controls: "Keyboard Shortcuts"
+            case .library: "Library"
+            case .performance: "Performance"
             case .playback: "Playback Preferences"
             case .video: "Video Defaults"
             case .audio: "Audio Defaults"
@@ -35,6 +43,10 @@ struct SettingsView: View {
         var systemImage: String {
             switch self {
             case .interface: "cursorarrow"
+            case .privacy: "hand.raised"
+            case .controls: "keyboard"
+            case .library: "folder"
+            case .performance: "gauge.with.dots.needle.67percent"
             case .playback: "play"
             case .video: "film"
             case .audio: "waveform"
@@ -66,6 +78,10 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 20) {
                         switch pane {
                         case .interface: InterfacePane()
+                        case .privacy: PrivacyPane()
+                        case .controls: ControlsPane()
+                        case .library: LibraryPane()
+                        case .performance: PerformancePane()
                         case .playback: PlaybackPane()
                         case .video: VideoPane()
                         case .audio: AudioPane()
@@ -338,6 +354,131 @@ private struct NetworkPane: View {
         SettingsSection("History") {
             SettingsRow("Keep streams in Recent", info: "Remember network streams you open in Recent and Network.") {
                 OnOffToggle(isOn: $settings.keepsStreamsInRecent, label: "Keep streams in Recent")
+            }
+        }
+    }
+}
+
+private struct LibraryPane: View {
+    @Environment(MediaLibrary.self) private var library
+    @State private var isChoosingFolder = false
+
+    var body: some View {
+        SettingsSection("Folders") {
+            SettingsRow("Movies and Music", info: "Always included.") {
+                Text("Included")
+                    .foregroundStyle(Theme.textMuted)
+            }
+            ForEach(library.customFolders, id: \.path) { folder in
+                SettingsRow(MediaLibrary.name(of: folder), info: folder.path) {
+                    Button("Remove") { library.removeFolder(folder) }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Theme.accentText)
+                        .focusEffectDisabled()
+                }
+            }
+            HStack(spacing: 16) {
+                Button { isChoosingFolder = true } label: {
+                    Label("Add Folder…", systemImage: "plus")
+                }
+                Button { library.rescan() } label: {
+                    Label(library.isScanning ? "Scanning…" : "Rescan", systemImage: "arrow.clockwise")
+                }
+                .disabled(library.isScanning)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(Theme.accentText)
+            .focusEffectDisabled()
+            .padding(.top, 10)
+        }
+        .fileImporter(isPresented: $isChoosingFolder, allowedContentTypes: [.folder], allowsMultipleSelection: true) { result in
+            if case .success(let urls) = result {
+                urls.forEach(library.addFolder)
+            }
+        }
+    }
+}
+
+private struct PrivacyPane: View {
+    @Environment(SettingsStore.self) private var settings
+    @Environment(PlaybackHistory.self) private var history
+    @State private var isConfirmingClear = false
+
+    var body: some View {
+        @Bindable var settings = settings
+        SettingsSection("History") {
+            SettingsRow("Remember playback history", info: "Needed for Recent, Continue Watching and resuming where you left off.") {
+                OnOffToggle(isOn: $settings.savesHistory, label: "Remember playback history")
+            }
+            SettingsRow("Playback history", info: "Positions and recently played files, stored only on this Mac.") {
+                Button("Clear History…") { isConfirmingClear = true }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(history.recentItems.isEmpty ? Theme.textMuted : Theme.accentText)
+                    .focusEffectDisabled()
+                    .disabled(history.recentItems.isEmpty)
+            }
+        }
+        .confirmationDialog("Clear playback history?", isPresented: $isConfirmingClear) {
+            Button("Clear History", role: .destructive) { history.clear() }
+        } message: {
+            Text("Recent and Continue Watching will be emptied, and files will start from the beginning. Playlists aren't affected.")
+        }
+    }
+}
+
+private struct PerformancePane: View {
+    @Environment(SettingsStore.self) private var settings
+
+    var body: some View {
+        @Bindable var settings = settings
+        SettingsSection("Decoding") {
+            SettingsRow("Hardware decoding", info: "Uses the Mac's video decoder (VideoToolbox). Turn off if a file shows glitches; software decoding uses more power. Applies to the next file you open.") {
+                OnOffToggle(isOn: $settings.hardwareDecoding, label: "Hardware decoding")
+            }
+        }
+    }
+}
+
+/// Read-only list of the app's keyboard shortcuts.
+private struct ControlsPane: View {
+    private let groups: [(String, [(String, String)])] = [
+        ("Playback", [
+            ("Play / Pause", "Space"),
+            ("Jump forward / back", "⌘→  ⌘←"),
+            ("Next / Previous", "⌥⌘→  ⌥⌘←"),
+            ("Stop", "⌘."),
+            ("Continue where you left off", "Return"),
+        ]),
+        ("Navigation", [
+            ("Show Library", "⌘1"),
+            ("Show Player", "⌘2"),
+            ("Back / Forward", "⌘[  ⌘]"),
+            ("Search", "⌘F"),
+        ]),
+        ("Files", [
+            ("Open File…", "⌘O"),
+            ("Open Network Stream…", "⌘N"),
+            ("Settings", "⌘,"),
+        ]),
+    ]
+
+    var body: some View {
+        ForEach(groups, id: \.0) { group, shortcuts in
+            SettingsSection(group) {
+                ForEach(shortcuts, id: \.0) { name, keys in
+                    HStack {
+                        Text(name)
+                        Spacer()
+                        Text(keys)
+                            .font(.inter(13, .medium).monospacedDigit())
+                            .foregroundStyle(Theme.textPrimary)
+                            .padding(.horizontal, 10)
+                            .frame(height: 28)
+                            .background(Theme.well, in: .rect(cornerRadius: 6))
+                    }
+                    .frame(minHeight: 38)
+                    .accessibilityElement(children: .combine)
+                }
             }
         }
     }

@@ -102,7 +102,7 @@ final class PlayerController {
             errorMessage = "Cone Player can't read “\(item.fileName)”. Open it again with File › Open to give it access."
             return
         }
-        if item.isStream && settings.keepsStreamsInRecent { history.touch(item) }
+        if item.isStream && settings.keepsStreamsInRecent && settings.savesHistory { history.touch(item) }
         guard let media = VLCMedia(url: item.url) else {
             errorMessage = "Cone Player can't open \(item.fileName)."
             return
@@ -118,7 +118,7 @@ final class PlayerController {
         isAtEnd = false
         lastSaved = .zero
         resumeOffer = nil
-        if let resumePoint = history.resumePoint(for: item) {
+        if settings.savesHistory, let resumePoint = history.resumePoint(for: item) {
             switch settings.resumeMode {
             case .always:
                 media.addOption(":start-time=\(resumePoint.components.seconds)")
@@ -130,6 +130,13 @@ final class PlayerController {
         }
         if item.isStream {
             media.addOption(":network-caching=\(Int(settings.networkCaching))")
+        }
+        if !settings.hardwareDecoding {
+            // Pick FFmpeg's decoder instead of VideoToolbox, without its hardware path.
+            // Neither option is on VLC's list of options a file may set, so they have
+            // to be added as trusted or they're silently ignored.
+            media.addOption(":codec=avcodec,any", withFlags: .trusted)
+            media.addOption(":no-hw-dec", withFlags: .trusted)
         }
         if !settings.preferredAudioLanguage.isEmpty {
             media.addOption(":audio-language=\(settings.preferredAudioLanguage)")
@@ -297,7 +304,7 @@ final class PlayerController {
             // end (or the end of a live stream, which has no length) counts as finished.
             let reachedEnd = duration == .zero || player.position >= 0.9 || duration - elapsed < .seconds(3)
             if reachedEnd {
-                if let current, duration > .zero { history.markFinished(current) }
+                if let current, duration > .zero, settings.savesHistory { history.markFinished(current) }
                 if hasNext && settings.autoPlayNext {
                     next()
                 } else {
@@ -324,7 +331,7 @@ final class PlayerController {
 
     private func saveProgress() {
         guard let current, !isAtEnd, elapsed > .zero, duration > .zero else { return }
-        if current.isStream && !settings.keepsStreamsInRecent { return }
+        if !settings.savesHistory || (current.isStream && !settings.keepsStreamsInRecent) { return }
         lastSaved = elapsed
         history.record(
             current,

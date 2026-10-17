@@ -52,6 +52,11 @@ struct MediaItem: Identifiable, Hashable, Sendable {
         self.init(url: url, kind: kind, dateAdded: dateAdded, folderPath: folderPath)
     }
 
+    /// The same item shown inside a top-level library folder (a folder added in Settings).
+    func inFolder(_ name: String) -> MediaItem {
+        MediaItem(url: url, kind: kind, dateAdded: dateAdded, folderPath: [name] + folderPath)
+    }
+
     private init(url: URL, kind: Kind, dateAdded: Date, folderPath: [String]) {
         self.url = url
         self.kind = kind

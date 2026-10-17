@@ -20,7 +20,7 @@ Cone Player is an independent project. It is not affiliated with or endorsed by 
 - Local network: the Network section finds UPnP/DLNA servers, Windows (SMB) shares and Bonjour services, and lets you browse and play their files (asks for a user name and password when a share needs one, and can remember it in the Keychain)
 - Network streams: File › Open Network Stream… (⌘N) for http(s), HLS, rtsp, rtmp, udp, srt and more; the Network section lists recent streams
 - Home: Continue Watching, Recently Added and your playlists at a glance
-- Library of videos and music from `~/Movies` and `~/Music`, browsable by folder with a breadcrumb and back/forward, as a grid or list, with Quick Look thumbnails, sorting and search
+- Library of videos and music from `~/Movies`, `~/Music` and any folders you add in Settings › Library, browsable by folder with a breadcrumb and back/forward, as a grid or list, with Quick Look thumbnails, sorting and search
 - Resume playback: remembers where you stopped, offers "You've watched till …" (or resumes automatically, per Settings), and shows progress bars and dimmed names for watched files
 - Recent: everything you've played, newest first, including files outside Movies/Music (kept reachable with security-scoped bookmarks)
 - Playlists: create, rename and delete; add files from the right-click menu; Play All plays the playlist in order
@@ -28,10 +28,10 @@ Cone Player is an independent project. It is not affiliated with or endorsed by 
 - Player screens from the Figma: video, and "Player – Music" with blurred artwork and waveform progress bar
 - Control bar: previous/next through the library list, ±10s, play/pause, seek, VLC's 0–200% wedge volume, audio track and subtitle menus, queue
 - Light theme: Settings › Interface › Theme switches between Dark (the original design), Light and System
-- Settings (⌘,): Interface (theme, start screen, grid/list, miniplayer), Video (fit, aspect ratio, deinterlace, color adjustments), Network (stream caching, keep streams in Recent), plus continue where you left off (Ask/Always/Never), playback speed, jump interval, auto-play next, audio and subtitle delay, subtitle size, preferred audio/subtitle language, and VLC's 10-band equalizer with presets
+- Settings (⌘,): Library (add folders, rescan), Privacy (history on/off, clear), Performance (hardware decoding), Keyboard Shortcuts, Interface (theme, start screen, grid/list, miniplayer), Video (fit, aspect ratio, deinterlace, color adjustments), Network (stream caching, keep streams in Recent), plus continue where you left off (Ask/Always/Never), playback speed, jump interval, auto-play next, audio and subtitle delay, subtitle size, preferred audio/subtitle language, and VLC's 10-band equalizer with presets
 - Keyboard: Space play/pause, ⌘← / ⌘→ jump 10s, ⌥⌘← / ⌥⌘→ previous/next, ⌘1 Library, ⌘2 Player, ⌘[ / ⌘] back/forward, ⌘F search, ⌘N open stream, ⌘. stop
 
-Planned next: remaining Settings panes (General, Privacy, Controls, Library, Performance, Recording), UI tests, Developer ID signing and notarization.
+Planned next: Recording, UI tests, Developer ID signing and notarization.
 
 ## Design notes
 

@@ -111,6 +111,17 @@ final class SettingsStore {
     var libraryLayout: LibraryLayout = .grid { didSet { changed("libraryLayout", libraryLayout.rawValue) } }
     var showsMiniplayer = true { didSet { changed("showsMiniplayer", showsMiniplayer) } }
 
+    // MARK: Privacy
+
+    /// Remember positions and recently played items. Off means no Recent, no resume.
+    var savesHistory = true { didSet { changed("savesHistory", savesHistory) } }
+
+    // MARK: Performance
+
+    /// Decode video with VideoToolbox (the GPU). Off forces software decoding, which
+    /// can help with files the hardware decoder shows glitches on.
+    var hardwareDecoding = true { didSet { changed("hardwareDecoding", hardwareDecoding) } }
+
     // MARK: Network
 
     /// Milliseconds VLC buffers network streams before playing.
@@ -161,6 +172,8 @@ final class SettingsStore {
         libraryLayout = defaults.string(forKey: "libraryLayout").flatMap(LibraryLayout.init(rawValue:)) ?? .grid
         showsMiniplayer = defaults.object(forKey: "showsMiniplayer") as? Bool ?? showsMiniplayer
         networkCaching = defaults.object(forKey: "networkCaching") as? Double ?? networkCaching
+        savesHistory = defaults.object(forKey: "savesHistory") as? Bool ?? savesHistory
+        hardwareDecoding = defaults.object(forKey: "hardwareDecoding") as? Bool ?? hardwareDecoding
         keepsStreamsInRecent = defaults.object(forKey: "keepsStreamsInRecent") as? Bool ?? keepsStreamsInRecent
         subtitleDelay = defaults.object(forKey: "subtitleDelay") as? Int ?? subtitleDelay
         subtitleScale = defaults.object(forKey: "subtitleScale") as? Double ?? subtitleScale

@@ -17,6 +17,17 @@ struct SettingsStoreTests {
         #expect(settings.startScreen == .home)
         #expect(settings.equalizerBands.count == Equalizer.bandCount)
         #expect(!settings.isEqualizerEnabled)
+        #expect(settings.savesHistory)
+        #expect(settings.hardwareDecoding)
+    }
+
+    @Test func privacyAndPerformancePersist() {
+        let settings = SettingsStore(defaults: storage.defaults)
+        settings.savesHistory = false
+        settings.hardwareDecoding = false
+        let reopened = SettingsStore(defaults: storage.defaults)
+        #expect(!reopened.savesHistory)
+        #expect(!reopened.hardwareDecoding)
     }
 
     @Test func persistsChanges() {

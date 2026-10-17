@@ -103,6 +103,9 @@ struct ConePlayerApp: App {
         Settings {
             SettingsView()
                 .environment(settings)
+                .environment(library)
+                .environment(history)
+                .environment(playlists)
         }
     }
 
