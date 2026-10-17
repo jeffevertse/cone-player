@@ -12,6 +12,8 @@ Cone Player is an independent project. It is not affiliated with or endorsed by 
 | --- | --- |
 | ![Music player](docs/images/player-music.png) | ![Video player](docs/images/player-video.png) |
 
+![Audio settings with equalizer](docs/images/settings-audio.png)
+
 ## What works today
 
 - Plays any video or audio file VLC can play (File › Open, drag and drop, or Open With in Finder)

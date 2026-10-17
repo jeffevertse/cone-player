@@ -115,6 +115,6 @@ enum Equalizer {
     }
 
     static func label(for frequency: Float) -> String {
-        frequency >= 1000 ? "\(Int(frequency / 1000))K" : "\(Int(frequency))"
+        frequency >= 1000 ? "\(Int(frequency / 1000)) KHz" : "\(Int(frequency)) Hz"
     }
 }
