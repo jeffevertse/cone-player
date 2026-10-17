@@ -39,6 +39,12 @@ struct ConePlayerApp: App {
                     if case .success(let urls) = result { open(urls) }
                 }
                 .onOpenURL { open([$0]) }
+                .sheet(isPresented: $navigation.isOpeningStream) {
+                    NetworkStreamSheet()
+                        .environment(player)
+                        .environment(history)
+                        .environment(navigation)
+                }
         }
         .defaultSize(width: 1440, height: 900)
         .windowStyle(.hiddenTitleBar)
@@ -47,6 +53,8 @@ struct ConePlayerApp: App {
             CommandGroup(replacing: .newItem) {
                 Button("Open File…") { navigation.isImporting = true }
                     .keyboardShortcut("o")
+                Button("Open Network Stream…") { navigation.isOpeningStream = true }
+                    .keyboardShortcut("n")
             }
             CommandGroup(before: .sidebar) {
                 Button("Show Library") { navigation.screen = .library }

@@ -10,13 +10,31 @@ struct MediaItem: Identifiable, Hashable, Sendable {
     /// Folders between the library root (Movies or Music) and the file.
     let folderPath: [String]
     var id: URL { url }
-    var fileName: String { url.lastPathComponent }
-    var title: String { url.deletingPathExtension().lastPathComponent }
-    var folderName: String { url.deletingLastPathComponent().lastPathComponent }
+    /// Identifies the item in history and playlists: the path for files, the full URL for streams.
+    var key: String { url.isFileURL ? url.path : url.absoluteString }
+    var isStream: Bool { !url.isFileURL }
+    var fileName: String { isStream ? url.absoluteString : url.lastPathComponent }
+    var title: String {
+        guard isStream else { return url.deletingPathExtension().lastPathComponent }
+        let name = url.deletingPathExtension().lastPathComponent
+        return name.isEmpty || name == "/" ? (url.host() ?? url.absoluteString) : name
+    }
+    var folderName: String { isStream ? (url.host() ?? "Network") : url.deletingLastPathComponent().lastPathComponent }
+
+    /// A network stream (http, rtsp, …). Treated as video; VLC works out what it really is.
+    init(streamURL: URL) {
+        self.init(url: streamURL, kind: .video, dateAdded: .now, folderPath: [])
+    }
 
     /// `root` is the library folder the file was found in; files opened directly have none.
+    /// Non-file URLs become streams.
     init?(url: URL, root: URL? = nil) {
+        guard url.isFileURL else {
+            self.init(streamURL: url)
+            return
+        }
         guard let type = UTType(filenameExtension: url.pathExtension.lowercased()) else { return nil }
+        let kind: Kind
         if type.conforms(to: .movie) || type.conforms(to: .video) {
             kind = .video
         } else if type.conforms(to: .audio) {
@@ -24,18 +42,24 @@ struct MediaItem: Identifiable, Hashable, Sendable {
         } else {
             return nil
         }
-        self.url = url
+        var folderPath: [String] = []
         if let root {
             let rootCount = root.standardizedFileURL.pathComponents.count
             folderPath = Array(url.standardizedFileURL.deletingLastPathComponent().pathComponents.dropFirst(rootCount))
-        } else {
-            folderPath = []
         }
         let values = try? url.resourceValues(forKeys: [.addedToDirectoryDateKey, .creationDateKey])
-        dateAdded = values?.addedToDirectoryDate ?? values?.creationDate ?? .distantPast
+        let dateAdded = values?.addedToDirectoryDate ?? values?.creationDate ?? .distantPast
+        self.init(url: url, kind: kind, dateAdded: dateAdded, folderPath: folderPath)
+    }
+
+    private init(url: URL, kind: Kind, dateAdded: Date, folderPath: [String]) {
+        self.url = url
+        self.kind = kind
+        self.dateAdded = dateAdded
+        self.folderPath = folderPath
     }
 
     // The same file is the same item, whether it came from the library, Recent or a playlist.
-    static func == (lhs: MediaItem, rhs: MediaItem) -> Bool { lhs.url.path == rhs.url.path }
-    func hash(into hasher: inout Hasher) { hasher.combine(url.path) }
+    static func == (lhs: MediaItem, rhs: MediaItem) -> Bool { lhs.key == rhs.key }
+    func hash(into hasher: inout Hasher) { hasher.combine(key) }
 }

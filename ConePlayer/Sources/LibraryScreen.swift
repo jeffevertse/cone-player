@@ -28,6 +28,7 @@ struct LibraryScreen: View {
         case .videos: library.videos
         case .music: library.music
         case .recent: history.recentItems
+        case .network: history.recentItems.filter(\.isStream)
         case .playlists: openPlaylist.map { playlists.items(in: $0.id) } ?? []
         }
     }
@@ -113,6 +114,9 @@ struct LibraryScreen: View {
             if let playlist = openPlaylist, !items.isEmpty {
                 IconButton("play", label: "Play All") { play(items[0]) }
                 playlistMenu(playlist)
+            }
+            if section == .network {
+                IconButton("plus", label: "Open Network Stream") { navigation.isOpeningStream = true }
             }
             if section == .recent && !items.isEmpty {
                 Button("Clear") { history.clear() }
@@ -204,6 +208,7 @@ struct LibraryScreen: View {
         if !query.isEmpty { return "No Results" }
         switch section {
         case .recent: return "No Recent Items"
+        case .network: return "No Network Streams"
         case .playlists: return "Empty Playlist"
         default: return "No \(section.rawValue)"
         }
@@ -215,6 +220,7 @@ struct LibraryScreen: View {
         case .videos: return "Add files to your Movies folder, drop a file here, or use Add item."
         case .music: return "Add files to your Music folder, drop a file here, or use Add item."
         case .recent: return "Files you play show up here."
+        case .network: return "Choose File › Open Network Stream… (⌘N) or the + button to play a URL."
         case .playlists: return "Right-click a file and choose Add to Playlist."
         }
     }
@@ -231,7 +237,14 @@ struct LibraryScreen: View {
             if !playlists.playlists.isEmpty { Divider() }
             Button("New Playlist…") { newPlaylistItems = [item] }
         }
-        Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }
+        if item.isStream {
+            Button("Copy URL") {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(item.url.absoluteString, forType: .string)
+            }
+        } else {
+            Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }
+        }
         if let playlist = openPlaylist {
             Divider()
             Button("Remove from Playlist", role: .destructive) { playlists.remove(item, from: playlist.id) }
@@ -261,7 +274,7 @@ struct LibraryScreen: View {
 /// Wraps the files for `.sheet(item:)`.
 private struct PendingPlaylist: Identifiable {
     let items: [MediaItem]
-    var id: [String] { items.map(\.url.path) }
+    var id: [String] { items.map(\.key) }
 }
 
 // MARK: - Folders
@@ -421,13 +434,14 @@ private struct Thumbnail: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
             } else {
-                Image(systemName: item.kind == .video ? "film" : "music.note")
+                Image(systemName: item.isStream ? "dot.radiowaves.left.and.right" : item.kind == .video ? "film" : "music.note")
                     .font(.system(size: cornerRadius > 6 ? 24 : 10))
                     .foregroundStyle(Theme.separator)
             }
         }
         .clipShape(.rect(cornerRadius: cornerRadius))
-        .task(id: item.url) { await thumbnails.load(item.url) }
+        // Streams have no local file for Quick Look to preview.
+        .task(id: item.url) { if !item.isStream { await thumbnails.load(item.url) } }
         .accessibilityHidden(true)
     }
 }

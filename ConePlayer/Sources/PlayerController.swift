@@ -86,7 +86,7 @@ final class PlayerController {
         beginAccess(to: item.url)
         // A file from Recent or a playlist that was saved without a bookmark, or that
         // moved, can't be read; say so instead of showing a silent black screen.
-        guard FileManager.default.isReadableFile(atPath: item.url.path) else {
+        guard item.isStream || FileManager.default.isReadableFile(atPath: item.url.path) else {
             player.stop()
             if let queue { self.queue = queue }
             current = item
@@ -99,6 +99,7 @@ final class PlayerController {
             errorMessage = "Cone Player can't read “\(item.fileName)”. Open it again with File › Open to give it access."
             return
         }
+        if item.isStream { history.touch(item) }
         guard let media = VLCMedia(url: item.url) else {
             errorMessage = "Cone Player can't open \(item.fileName)."
             return

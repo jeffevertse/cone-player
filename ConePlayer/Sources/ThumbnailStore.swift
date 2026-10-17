@@ -21,7 +21,10 @@ final class ThumbnailStore {
             representationTypes: .thumbnail
         )
         // Files Quick Look can't preview simply keep the placeholder.
-        guard let representation = try? await QLThumbnailGenerator.shared.generateBestRepresentation(for: request) else {
+        // Only real previews: a generic file-type icon (audio without cover art) looks
+        // worse than the placeholder.
+        guard let representation = try? await QLThumbnailGenerator.shared.generateBestRepresentation(for: request),
+              representation.type == .thumbnail else {
             return
         }
         images[url] = representation.nsImage

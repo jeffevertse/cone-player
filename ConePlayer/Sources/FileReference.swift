@@ -4,8 +4,9 @@ import Foundation
 ///
 /// Files outside Movies and Music (Downloads, external drives) can only be
 /// reopened by a sandboxed app through a security-scoped bookmark, so one is
-/// stored alongside the path.
+/// stored alongside the path. Network streams are stored by their URL string.
 struct FileReference: Codable, Hashable, Sendable {
+    /// A file path, or a stream's full URL.
     let path: String
     var bookmark: Data?
 
@@ -16,6 +17,11 @@ struct FileReference: Codable, Hashable, Sendable {
     }
 
     init(url: URL) {
+        guard url.isFileURL else {
+            path = url.absoluteString
+            bookmark = nil
+            return
+        }
         path = url.path
         // Creating a security-scoped bookmark needs read access right now.
         let didAccess = url.startAccessingSecurityScopedResource()
@@ -31,6 +37,9 @@ struct FileReference: Codable, Hashable, Sendable {
 
     /// The file's URL, carrying sandbox access when it came from a bookmark.
     func resolve() -> URL {
+        if path.contains("://"), let streamURL = URL(string: path) {
+            return streamURL
+        }
         if let bookmark {
             var isStale = false
             if let url = try? URL(resolvingBookmarkData: bookmark, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &isStale) {

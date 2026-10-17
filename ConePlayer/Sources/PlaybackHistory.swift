@@ -30,7 +30,7 @@ final class PlaybackHistory {
     }
 
     func entry(for item: MediaItem) -> Entry? {
-        entries[item.url.path]
+        entries[item.key]
     }
 
     /// Where to offer resuming, or nil if the file is new, barely started or finished.
@@ -42,7 +42,7 @@ final class PlaybackHistory {
     }
 
     func record(_ item: MediaItem, seconds: Double, progress: Double) {
-        entries[item.url.path] = Entry(
+        entries[item.key] = Entry(
             seconds: seconds,
             progress: min(max(progress, 0), 1),
             isFinished: progress >= 0.95,
@@ -53,10 +53,20 @@ final class PlaybackHistory {
     }
 
     func markFinished(_ item: MediaItem) {
-        let seconds = entries[item.url.path]?.seconds ?? 0
-        entries[item.url.path] = Entry(
+        let seconds = entries[item.key]?.seconds ?? 0
+        entries[item.key] = Entry(
             seconds: seconds, progress: 1, isFinished: true, lastPlayed: .now, reference: reference(for: item)
         )
+        save()
+    }
+
+    /// Marks an item as just opened. Used for streams, which may be live (no length)
+    /// and so never get a progress entry.
+    func touch(_ item: MediaItem) {
+        var entry = entries[item.key] ?? Entry(seconds: 0, progress: 0, isFinished: false, lastPlayed: .now, reference: nil)
+        entry.lastPlayed = .now
+        entry.reference = entry.reference ?? FileReference(url: item.url)
+        entries[item.key] = entry
         save()
     }
 
@@ -70,7 +80,7 @@ final class PlaybackHistory {
     }
 
     func remove(_ item: MediaItem) {
-        entries[item.url.path] = nil
+        entries[item.key] = nil
         save()
     }
 
@@ -82,7 +92,7 @@ final class PlaybackHistory {
     /// Keeps an existing bookmark; creates one while the file is playing (and so readable)
     /// if there isn't one yet.
     private func reference(for item: MediaItem) -> FileReference {
-        if let existing = entries[item.url.path]?.reference, existing.bookmark != nil {
+        if let existing = entries[item.key]?.reference, existing.bookmark != nil {
             return existing
         }
         return FileReference(url: item.url)

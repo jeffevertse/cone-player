@@ -53,12 +53,12 @@ final class PlaylistStore {
     func add(_ items: [MediaItem], to id: UUID) {
         update(id) { playlist in
             let existing = Set(playlist.files.map(\.path))
-            playlist.files += items.filter { !existing.contains($0.url.path) }.map { FileReference(url: $0.url) }
+            playlist.files += items.filter { !existing.contains($0.key) }.map { FileReference(url: $0.url) }
         }
     }
 
     func remove(_ item: MediaItem, from id: UUID) {
-        update(id) { $0.files.removeAll { $0.path == item.url.path } }
+        update(id) { $0.files.removeAll { $0.path == item.key } }
     }
 
     private func update(_ id: UUID, _ change: (inout Playlist) -> Void) {

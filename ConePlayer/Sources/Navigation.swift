@@ -3,6 +3,7 @@ import Observation
 enum LibrarySection: String, CaseIterable, Identifiable {
     case videos = "Videos"
     case music = "Music"
+    case network = "Network"
     case playlists = "Playlists"
     case recent = "Recent"
 
@@ -12,6 +13,7 @@ enum LibrarySection: String, CaseIterable, Identifiable {
         switch self {
         case .videos: "play.rectangle"
         case .music: "music.note"
+        case .network: "dot.radiowaves.left.and.right"
         case .playlists: "list.triangle"
         case .recent: "clock.arrow.circlepath"
         }
@@ -64,4 +66,5 @@ final class Navigation {
     }
     var isImporting = false
     var isSearchFocused = false
+    var isOpeningStream = false
 }
