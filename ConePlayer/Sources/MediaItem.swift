@@ -6,7 +6,9 @@ struct MediaItem: Identifiable, Hashable, Sendable {
 
     let url: URL
     let kind: Kind
+    let dateAdded: Date
     var id: URL { url }
+    var fileName: String { url.lastPathComponent }
     var title: String { url.deletingPathExtension().lastPathComponent }
     var folderName: String { url.deletingLastPathComponent().lastPathComponent }
 
@@ -20,5 +22,7 @@ struct MediaItem: Identifiable, Hashable, Sendable {
             return nil
         }
         self.url = url
+        let values = try? url.resourceValues(forKeys: [.addedToDirectoryDateKey, .creationDateKey])
+        dateAdded = values?.addedToDirectoryDate ?? values?.creationDate ?? .distantPast
     }
 }

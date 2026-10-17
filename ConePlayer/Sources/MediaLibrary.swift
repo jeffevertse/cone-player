@@ -17,12 +17,15 @@ final class MediaLibrary {
         let roots = folders.compactMap {
             FileManager.default.urls(for: $0, in: .userDomainMask).first?.resolvingSymlinksInPath()
         }
-        let items = await Task.detached(priority: .utility) {
-            roots.flatMap(Self.files(in:))
-        }.value
-
-        videos = items.filter { $0.kind == .video }.sorted { $0.title < $1.title }
-        music = items.filter { $0.kind == .audio }.sorted { $0.title < $1.title }
+        videos = []
+        music = []
+        // Scan one folder at a time so Videos appears even while macOS is still
+        // asking for permission to read the Music folder.
+        for root in roots {
+            let found = await Task.detached(priority: .utility) { Self.files(in: root) }.value
+            videos = (videos + found.filter { $0.kind == .video }).sorted { $0.title < $1.title }
+            music = (music + found.filter { $0.kind == .audio }).sorted { $0.title < $1.title }
+        }
     }
 
     private nonisolated static func files(in root: URL) -> [MediaItem] {

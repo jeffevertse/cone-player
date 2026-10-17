@@ -13,8 +13,10 @@ settings:
     SWIFT_VERSION: "6.0"
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
-    CODE_SIGN_IDENTITY: "-"
-    CODE_SIGN_STYLE: Manual
+    # A stable signing identity lets macOS remember privacy permissions between builds.
+    CODE_SIGN_IDENTITY: Apple Development
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: 2C39YHVFA2
     ENABLE_HARDENED_RUNTIME: YES
 targets:
   ConePlayer:
@@ -22,12 +24,16 @@ targets:
     platform: macOS
     sources:
       - ConePlayer/Sources
+      - path: ConePlayer/Resources/Fonts
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: VLCKit
     info:
       path: ConePlayer/Info.plist
       properties:
         CFBundleDisplayName: Cone Player
+        ATSApplicationFontsPath: Fonts
         LSApplicationCategoryType: public.app-category.entertainment
         CFBundleDocumentTypes:
           - CFBundleTypeName: Media

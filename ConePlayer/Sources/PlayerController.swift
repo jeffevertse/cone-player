@@ -6,13 +6,24 @@ import VLCKit
 @MainActor
 @Observable
 final class PlayerController {
+    struct Track: Identifiable, Hashable {
+        let id: String
+        let name: String
+        let isSelected: Bool
+    }
+
     private(set) var current: MediaItem?
+    private(set) var queue: [MediaItem] = []
     private(set) var isPlaying = false
     private(set) var elapsed: Duration = .zero
     private(set) var duration: Duration = .zero
     private(set) var errorMessage: String?
 
-    /// 0...1 playback position. Setting it seeks.
+    /// "Artist - Title" from the file's metadata, falling back to the file name.
+    private(set) var displayTitle = ""
+    private(set) var artwork: NSImage?
+
+    /// 0...1 playback position. While scrubbing, setting it seeks.
     var position: Double = 0 {
         didSet {
             guard isScrubbing else { return }
@@ -21,9 +32,9 @@ final class PlayerController {
     }
     var isScrubbing = false
 
-    /// 0...100. VLC accepts up to 200, but anything above 100 amplifies.
-    var volume: Double = 70 {
-        didSet { player.audio?.volume = Int32(volume) }
+    /// 0...200 like VLC; anything above 100 amplifies.
+    var volume: Double = 100 {
+        didSet { player.audio?.volume = Int32(volume.rounded()) }
     }
 
     /// The view VLC renders video into. There is one for the app's lifetime.
@@ -38,28 +49,48 @@ final class PlayerController {
     /// output is what VLC 4 itself uses on Apple platforms.
     private let player = VLCMediaPlayer(options: ["--vout=samplebufferdisplay"])
     private var pollTask: Task<Void, Never>?
+    private var hasStarted = false
+    /// Set when the last item finishes, so the bar shows 00:00:00 instead of VLC's final position.
+    private var isAtEnd = false
+    private var loadedArtworkURL: URL?
 
     init() {
         player.drawable = videoView
         startPolling()
     }
 
-    func play(_ item: MediaItem) {
+    // MARK: - Commands
+
+    /// Plays `item`; `queue` is the list that previous/next walk through.
+    func play(_ item: MediaItem, in queue: [MediaItem]? = nil) {
         guard let media = VLCMedia(url: item.url) else {
-            errorMessage = "Cone Player can't open \(item.url.lastPathComponent)."
+            errorMessage = "Cone Player can't open \(item.fileName)."
             return
         }
+        if let queue { self.queue = queue } else if !self.queue.contains(item) { self.queue = [item] }
         errorMessage = nil
         current = item
+        displayTitle = item.title
+        artwork = nil
+        loadedArtworkURL = nil
         position = 0
+        hasStarted = false
+        isAtEnd = false
         player.media = media
-        player.audio?.volume = Int32(volume)
+        player.audio?.volume = Int32(volume.rounded())
         player.play()
     }
 
     func togglePlayPause() {
         guard current != nil else { return }
-        player.isPlaying ? player.pause() : player.play()
+        if player.isPlaying {
+            player.pause()
+        } else if player.state != .paused, let current {
+            // Finished or stopped: start the item again.
+            play(current)
+        } else {
+            player.play()
+        }
     }
 
     func skip(by seconds: Int) {
@@ -68,9 +99,46 @@ final class PlayerController {
         player.time = VLCTime(int: Int32(clamping: target))
     }
 
+    var hasNext: Bool { index.map { $0 + 1 < queue.count } ?? false }
+    var hasPrevious: Bool { index.map { $0 > 0 } ?? false }
+
+    func next() {
+        guard let index, index + 1 < queue.count else { return }
+        play(queue[index + 1])
+    }
+
+    /// Restarts the current item if it has played a few seconds, otherwise goes back one.
+    func previous() {
+        if elapsed > .seconds(3) || !hasPrevious {
+            player.position = 0
+        } else if let index {
+            play(queue[index - 1])
+        }
+    }
+
     func stop() {
         player.stop()
         current = nil
+        queue = []
+    }
+
+    private var index: Int? { current.flatMap { queue.firstIndex(of: $0) } }
+
+    // MARK: - Tracks
+
+    var audioTracks: [Track] { player.audioTracks.map(Track.init) }
+    var subtitleTracks: [Track] { player.textTracks.map(Track.init) }
+
+    func selectAudioTrack(_ id: String) {
+        player.audioTracks.first { $0.trackId == id }?.isSelectedExclusively = true
+    }
+
+    func selectSubtitleTrack(_ id: String?) {
+        guard let id else {
+            player.deselectAllTextTracks()
+            return
+        }
+        player.textTracks.first { $0.trackId == id }?.isSelectedExclusively = true
     }
 
     // MARK: - State sync
@@ -87,14 +155,45 @@ final class PlayerController {
     }
 
     private func refresh() {
+        guard current != nil else { return }
         isPlaying = player.isPlaying
-        elapsed = .milliseconds(Int(player.time.intValue))
+        if isPlaying { hasStarted = true }
         duration = .milliseconds(Int(player.media?.length.intValue ?? 0))
-        if !isScrubbing {
-            position = player.position
+        if isAtEnd {
+            elapsed = .zero
+            position = 0
+        } else {
+            elapsed = .milliseconds(Int(player.time.intValue))
+            if !isScrubbing { position = player.position }
         }
         if player.state == .error {
             errorMessage = "Playback failed."
+        } else if hasStarted && !isPlaying && player.state != .paused && player.state != .opening {
+            // Reached the end of the file.
+            hasStarted = false
+            if hasNext {
+                next()
+            } else {
+                isAtEnd = true
+            }
         }
+        refreshMetadata()
+    }
+
+    private func refreshMetadata() {
+        guard let meta = player.media?.metaData, let current else { return }
+        if let title = meta.title, !title.isEmpty, title != current.fileName {
+            displayTitle = [meta.artist, title].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " - ")
+        }
+        if let url = meta.artworkURL, url != loadedArtworkURL {
+            loadedArtworkURL = url
+            artwork = NSImage(contentsOf: url)
+        }
+    }
+}
+
+private extension PlayerController.Track {
+    init(_ track: VLCMediaPlayer.Track) {
+        self.init(id: track.trackId, name: track.trackName, isSelected: track.isSelected)
     }
 }
