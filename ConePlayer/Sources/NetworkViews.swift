@@ -93,7 +93,7 @@ struct NetworkFolder: View {
                 ContentUnavailableView {
                     Label("Couldn't Open", systemImage: "exclamationmark.triangle")
                 } description: {
-                    Text("The server didn't respond, or needs a user name and password (not supported yet).")
+                    Text("The server didn't respond, or the login was cancelled or refused.")
                 } actions: {
                     Button("Try Again") { browser.reload(url) }
                 }

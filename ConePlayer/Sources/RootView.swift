@@ -4,6 +4,7 @@ struct RootView: View {
     @Environment(PlayerController.self) private var player
     @Environment(MediaLibrary.self) private var library
     @Environment(Navigation.self) private var navigation
+    @Environment(DialogCenter.self) private var dialogs
 
     var body: some View {
         VStack(spacing: 0) {
@@ -34,6 +35,9 @@ struct RootView: View {
         .onAppear { SpaceBarMonitor.install(player: player) }
         .onChange(of: player.current) { _, item in
             if item == nil { navigation.screen = .library }
+        }
+        .sheet(item: Binding(get: { dialogs.current }, set: { if $0 == nil { dialogs.dismiss() } })) { dialog in
+            VLCDialogSheet(dialog: dialog)
         }
         .dropDestination(for: URL.self) { urls, _ in
             let items = urls.compactMap { MediaItem(url: $0) }

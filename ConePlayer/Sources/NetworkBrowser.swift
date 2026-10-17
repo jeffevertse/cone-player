@@ -36,7 +36,10 @@ final class NetworkBrowser {
 
     @ObservationIgnored private var discoverers: [VLCMediaDiscoverer] = []
     @ObservationIgnored private var pollTask: Task<Void, Never>?
-    @ObservationIgnored private let parser = VLCMediaParser(library: VLCLibrary.shared(), timeout: 15_000)
+    /// 60 s, long enough to type a password into VLC's login dialog (the default is 5 s,
+    /// which cancels it). Despite the header saying milliseconds, this VLCKit build
+    /// takes the timeout in microseconds.
+    @ObservationIgnored private let parser = VLCMediaParser(library: VLCLibrary.shared(), timeout: 60_000_000)
     @ObservationIgnored private var parsing: [String: VLCMedia] = [:]
 
     /// Starts discovery the first time Network is shown, so macOS only asks for
@@ -66,8 +69,9 @@ final class NetworkBrowser {
         parsing[key] = media
         loading.insert(key)
         failed.remove(key)
-        // VLCMediaParse lists a directory's (or server's) items as subitems.
-        parser.queue(media, options: [.parse])
+        // VLCMediaParse lists a directory's (or server's) items as subitems; DoInteract
+        // lets VLC ask for a login through DialogCenter.
+        parser.queue(media, options: [.parse, .doInteract])
     }
 
     func reload(_ url: URL) {

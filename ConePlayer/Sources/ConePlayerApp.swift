@@ -1,4 +1,5 @@
 import SwiftUI
+import VLCKit
 import UniformTypeIdentifiers
 
 @main
@@ -8,6 +9,7 @@ struct ConePlayerApp: App {
     @State private var history: PlaybackHistory
     @State private var playlists = PlaylistStore()
     @State private var networkBrowser = NetworkBrowser()
+    @State private var dialogs = DialogCenter()
     @State private var library = MediaLibrary()
     @State private var thumbnails = ThumbnailStore()
     @State private var navigation: Navigation
@@ -34,6 +36,8 @@ struct ConePlayerApp: App {
                 .environment(playlists)
                 .environment(settings)
                 .environment(networkBrowser)
+                .environment(dialogs)
+                .task { dialogs.attach(to: [player.vlcLibrary, VLCLibrary.shared()]) }
                 .preferredColorScheme(.dark)
                 .tint(Theme.accent)
                 .frame(minWidth: 960, minHeight: 600)

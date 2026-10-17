@@ -50,6 +50,9 @@ final class PlayerController {
     /// VLC's OpenGL output asserts on recent macOS; the AVSampleBufferDisplayLayer
     /// output is what VLC 4 itself uses on Apple platforms.
     private let player = VLCMediaPlayer(options: ["--vout=samplebufferdisplay"])
+
+    /// The VLC instance playback runs on, for attaching the login dialog provider.
+    var vlcLibrary: VLCLibrary { player.libraryInstance }
     private var pollTask: Task<Void, Never>?
     private var hasStarted = false
     /// Set when the last item finishes, so the bar shows 00:00:00 instead of VLC's final position.
