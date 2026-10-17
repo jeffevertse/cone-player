@@ -29,10 +29,14 @@ struct ConePlayerApp: App {
                 .preferredColorScheme(.dark)
                 .tint(Theme.accent)
                 .frame(minWidth: 960, minHeight: 600)
-                .fileImporter(isPresented: $navigation.isImporting, allowedContentTypes: [.movie, .audio]) { result in
-                    if case .success(let url) = result { open(url) }
+                .fileImporter(
+                    isPresented: $navigation.isImporting,
+                    allowedContentTypes: [.movie, .audio],
+                    allowsMultipleSelection: true
+                ) { result in
+                    if case .success(let urls) = result { open(urls) }
                 }
-                .onOpenURL(perform: open)
+                .onOpenURL { open([$0]) }
         }
         .defaultSize(width: 1440, height: 900)
         .windowStyle(.hiddenTitleBar)
@@ -80,9 +84,11 @@ struct ConePlayerApp: App {
         }
     }
 
-    private func open(_ url: URL) {
-        guard let item = MediaItem(url: url) else { return }
-        player.play(item, in: [item])
+    /// Plays the first file and queues the rest.
+    private func open(_ urls: [URL]) {
+        let items = urls.compactMap { MediaItem(url: $0) }
+        guard let first = items.first else { return }
+        player.play(first, in: items)
         navigation.screen = .player
     }
 }

@@ -58,6 +58,8 @@ final class PlayerController {
     /// Elapsed time when progress was last saved, to save every few seconds.
     private var lastSaved: Duration = .zero
     private var terminationObserver: (any NSObjectProtocol)?
+    /// The file whose sandbox access we hold; see `beginAccess(to:)`.
+    private var accessedURL: URL?
 
     let settings: SettingsStore
     let history: PlaybackHistory
@@ -81,6 +83,7 @@ final class PlayerController {
     /// Plays `item`; `queue` is the list that previous/next walk through.
     func play(_ item: MediaItem, in queue: [MediaItem]? = nil) {
         saveProgress()
+        beginAccess(to: item.url)
         guard let media = VLCMedia(url: item.url) else {
             errorMessage = "Cone Player can't open \(item.fileName)."
             return
@@ -169,6 +172,7 @@ final class PlayerController {
     func stop() {
         saveProgress()
         player.stop()
+        beginAccess(to: nil)
         current = nil
         queue = []
     }
@@ -254,6 +258,18 @@ final class PlayerController {
             }
         }
         refreshMetadata()
+    }
+
+    /// Files picked in the Open panel or dropped on the window are security-scoped:
+    /// the sandbox only lets VLC read them while we hold access. Files in the
+    /// Movies/Music library don't need this (startAccessing returns false).
+    private func beginAccess(to url: URL?) {
+        guard url != accessedURL else { return }
+        accessedURL?.stopAccessingSecurityScopedResource()
+        accessedURL = nil
+        if let url, url.startAccessingSecurityScopedResource() {
+            accessedURL = url
+        }
     }
 
     private func saveProgress() {
