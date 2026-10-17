@@ -99,7 +99,7 @@ final class PlayerController {
             errorMessage = "Cone Player can't read “\(item.fileName)”. Open it again with File › Open to give it access."
             return
         }
-        if item.isStream { history.touch(item) }
+        if item.isStream && settings.keepsStreamsInRecent { history.touch(item) }
         guard let media = VLCMedia(url: item.url) else {
             errorMessage = "Cone Player can't open \(item.fileName)."
             return
@@ -124,6 +124,9 @@ final class PlayerController {
             case .never:
                 break
             }
+        }
+        if item.isStream {
+            media.addOption(":network-caching=\(Int(settings.networkCaching))")
         }
         if !settings.preferredAudioLanguage.isEmpty {
             media.addOption(":audio-language=\(settings.preferredAudioLanguage)")
@@ -207,6 +210,28 @@ final class PlayerController {
         player.equalizer = settings.isEqualizerEnabled
             ? Equalizer.make(preamp: settings.equalizerPreamp, bands: settings.equalizerBands)
             : nil
+
+        switch settings.deinterlace {
+        case .automatic: player.setDeinterlace(.auto, withFilter: "yadif")
+        case .on: player.setDeinterlace(.on, withFilter: "yadif")
+        case .off: player.setDeinterlace(.off, withFilter: "yadif")
+        }
+        player.videoAspectRatio = settings.aspectRatio.isEmpty ? nil : settings.aspectRatio
+        switch settings.videoFit {
+        case .fit: player.videoFitMode = .smaller
+        case .fill: player.videoFitMode = .larger
+        case .width: player.videoFitMode = .width
+        case .height: player.videoFitMode = .height
+        }
+        let adjust = player.adjustFilter
+        adjust.isEnabled = settings.isColorAdjustEnabled
+        if settings.isColorAdjustEnabled {
+            adjust.brightness.value = NSNumber(value: settings.brightness)
+            adjust.contrast.value = NSNumber(value: settings.contrast)
+            adjust.saturation.value = NSNumber(value: settings.saturation)
+            adjust.hue.value = NSNumber(value: settings.hue)
+            adjust.gamma.value = NSNumber(value: settings.gamma)
+        }
     }
 
     // MARK: - Tracks
@@ -296,6 +321,7 @@ final class PlayerController {
 
     private func saveProgress() {
         guard let current, !isAtEnd, elapsed > .zero, duration > .zero else { return }
+        if current.isStream && !settings.keepsStreamsInRecent { return }
         lastSaved = elapsed
         history.record(
             current,

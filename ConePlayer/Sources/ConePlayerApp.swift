@@ -9,11 +9,14 @@ struct ConePlayerApp: App {
     @State private var playlists = PlaylistStore()
     @State private var library = MediaLibrary()
     @State private var thumbnails = ThumbnailStore()
-    @State private var navigation = Navigation()
+    @State private var navigation: Navigation
 
     init() {
         let settings = SettingsStore()
         _settings = State(initialValue: settings)
+        let navigation = Navigation()
+        navigation.section = settings.startScreen
+        _navigation = State(initialValue: navigation)
         let history = PlaybackHistory()
         _history = State(initialValue: history)
         _player = State(initialValue: PlayerController(settings: settings, history: history))
@@ -28,6 +31,7 @@ struct ConePlayerApp: App {
                 .environment(navigation)
                 .environment(history)
                 .environment(playlists)
+                .environment(settings)
                 .preferredColorScheme(.dark)
                 .tint(Theme.accent)
                 .frame(minWidth: 960, minHeight: 600)

@@ -43,7 +43,7 @@ struct HomeView: View {
                 .padding(.vertical, 20)
             }
             .scrollIndicators(.never)
-            .contentMargins(.bottom, player.current == nil ? 0 : 340, for: .scrollContent)
+            .contentMargins(.bottom, player.current == nil || !player.settings.showsMiniplayer ? 0 : 340, for: .scrollContent)
         }
     }
 

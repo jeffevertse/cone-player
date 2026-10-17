@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct LibraryScreen: View {
-    enum Layout { case grid, list }
     enum Sort: String, CaseIterable { case name = "Name", dateAdded = "Date Added" }
 
     @Environment(PlayerController.self) private var player
@@ -10,12 +9,13 @@ struct LibraryScreen: View {
     @Environment(PlaybackHistory.self) private var history
     @Environment(PlaylistStore.self) private var playlists
     @State private var query = ""
-    @State private var layout: Layout = .grid
     @State private var sort: Sort = .name
     /// Files waiting to go into a playlist that's being created.
     @State private var newPlaylistItems: [MediaItem]?
 
     private var section: LibrarySection { navigation.section }
+    /// Saved in Settings › Interface, so the choice sticks.
+    private var layout: SettingsStore.LibraryLayout { player.settings.libraryLayout }
 
     /// The open playlist, when in Playlists and one is selected.
     private var openPlaylist: Playlist? {
@@ -152,7 +152,7 @@ struct LibraryScreen: View {
 
                 IconButton(layout == .grid ? "list.bullet" : "square.grid.2x2",
                            label: layout == .grid ? "Show as List" : "Show as Grid") {
-                    layout = layout == .grid ? .list : .grid
+                    player.settings.libraryLayout = layout == .grid ? .list : .grid
                 }
             }
             SearchField(text: $query, isFocused: Bindable(navigation).isSearchFocused)
@@ -209,7 +209,7 @@ struct LibraryScreen: View {
             }
             .scrollIndicators(.never)
             // Keep the last row clear of the miniplayer.
-            .contentMargins(.bottom, player.current == nil ? 0 : 340, for: .scrollContent)
+            .contentMargins(.bottom, player.current == nil || !player.settings.showsMiniplayer ? 0 : 340, for: .scrollContent)
         }
     }
 

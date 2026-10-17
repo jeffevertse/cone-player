@@ -12,6 +12,26 @@ final class SettingsStore {
         case never = "Never"
     }
 
+    enum Deinterlace: String, CaseIterable {
+        case automatic = "Automatic"
+        case on = "On"
+        case off = "Off"
+    }
+
+    enum VideoFit: String, CaseIterable {
+        case fit = "Fit inside window"
+        case fill = "Fill window"
+        case width = "Fit width"
+        case height = "Fit height"
+    }
+
+    enum LibraryLayout: String, CaseIterable {
+        case grid = "Grid"
+        case list = "List"
+    }
+
+    static let aspectRatios = ["", "16:9", "4:3", "16:10", "1:1", "5:4", "2.21:1", "2.35:1", "2.39:1"]
+
     // MARK: Playback
 
     /// What to do when opening a file that was stopped part-way.
@@ -39,6 +59,40 @@ final class SettingsStore {
     var equalizerBands: [Float] = Array(repeating: 0, count: Equalizer.bandCount) {
         didSet { changed("equalizerBands", equalizerBands) }
     }
+
+    // MARK: Video
+
+    var deinterlace: Deinterlace = .automatic { didSet { changed("deinterlace", deinterlace.rawValue) } }
+    /// "" for the file's own aspect ratio.
+    var aspectRatio = "" { didSet { changed("aspectRatio", aspectRatio) } }
+    var videoFit: VideoFit = .fit { didSet { changed("videoFit", videoFit.rawValue) } }
+    var isColorAdjustEnabled = false { didSet { changed("isColorAdjustEnabled", isColorAdjustEnabled) } }
+    /// VLC's adjust filter ranges: brightness and contrast 0…2, saturation 0…3, hue -180…180, gamma 0.01…10.
+    var brightness: Double = 1 { didSet { changed("brightness", brightness) } }
+    var contrast: Double = 1 { didSet { changed("contrast", contrast) } }
+    var saturation: Double = 1 { didSet { changed("saturation", saturation) } }
+    var hue: Double = 0 { didSet { changed("hue", hue) } }
+    var gamma: Double = 1 { didSet { changed("gamma", gamma) } }
+
+    func resetColorAdjustments() {
+        brightness = 1
+        contrast = 1
+        saturation = 1
+        hue = 0
+        gamma = 1
+    }
+
+    // MARK: Interface
+
+    var startScreen: LibrarySection = .home { didSet { changed("startScreen", startScreen.rawValue) } }
+    var libraryLayout: LibraryLayout = .grid { didSet { changed("libraryLayout", libraryLayout.rawValue) } }
+    var showsMiniplayer = true { didSet { changed("showsMiniplayer", showsMiniplayer) } }
+
+    // MARK: Network
+
+    /// Milliseconds VLC buffers network streams before playing.
+    var networkCaching: Double = 1000 { didSet { changed("networkCaching", networkCaching) } }
+    var keepsStreamsInRecent = true { didSet { changed("keepsStreamsInRecent", keepsStreamsInRecent) } }
 
     // MARK: Subtitles
 
@@ -70,6 +124,20 @@ final class SettingsStore {
         if let bands = defaults.array(forKey: "equalizerBands") as? [Float], bands.count == Equalizer.bandCount {
             equalizerBands = bands
         }
+        deinterlace = defaults.string(forKey: "deinterlace").flatMap(Deinterlace.init(rawValue:)) ?? .automatic
+        aspectRatio = defaults.string(forKey: "aspectRatio") ?? ""
+        videoFit = defaults.string(forKey: "videoFit").flatMap(VideoFit.init(rawValue:)) ?? .fit
+        isColorAdjustEnabled = defaults.bool(forKey: "isColorAdjustEnabled")
+        brightness = defaults.object(forKey: "brightness") as? Double ?? brightness
+        contrast = defaults.object(forKey: "contrast") as? Double ?? contrast
+        saturation = defaults.object(forKey: "saturation") as? Double ?? saturation
+        hue = defaults.object(forKey: "hue") as? Double ?? hue
+        gamma = defaults.object(forKey: "gamma") as? Double ?? gamma
+        startScreen = defaults.string(forKey: "startScreen").flatMap(LibrarySection.init(rawValue:)) ?? .home
+        libraryLayout = defaults.string(forKey: "libraryLayout").flatMap(LibraryLayout.init(rawValue:)) ?? .grid
+        showsMiniplayer = defaults.object(forKey: "showsMiniplayer") as? Bool ?? showsMiniplayer
+        networkCaching = defaults.object(forKey: "networkCaching") as? Double ?? networkCaching
+        keepsStreamsInRecent = defaults.object(forKey: "keepsStreamsInRecent") as? Bool ?? keepsStreamsInRecent
         subtitleDelay = defaults.object(forKey: "subtitleDelay") as? Int ?? subtitleDelay
         subtitleScale = defaults.object(forKey: "subtitleScale") as? Double ?? subtitleScale
         preferredSubtitleLanguage = defaults.string(forKey: "preferredSubtitleLanguage") ?? ""

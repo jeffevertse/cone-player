@@ -3,25 +3,43 @@ import SwiftUI
 /// The Settings window (⌘,), built to the Figma's "Settings – …" frames.
 struct SettingsView: View {
     enum Pane: String, CaseIterable, Identifiable, Codable {
+        case interface = "Interface"
         case playback = "Playback"
+        case video = "Video"
         case audio = "Audio"
         case subtitles = "Subtitles"
+        case network = "Network"
 
         var id: Self { self }
 
+        /// Sidebar group, as in the Figma: App, Media, System.
+        var group: String {
+            switch self {
+            case .interface: "App"
+            case .playback, .video, .audio, .subtitles: "Media"
+            case .network: "System"
+            }
+        }
+
         var title: String {
             switch self {
+            case .interface: "Interface"
             case .playback: "Playback Preferences"
+            case .video: "Video Defaults"
             case .audio: "Audio Defaults"
             case .subtitles: "Subtitle Defaults"
+            case .network: "Network"
             }
         }
 
         var systemImage: String {
             switch self {
+            case .interface: "cursorarrow"
             case .playback: "play"
+            case .video: "film"
             case .audio: "waveform"
             case .subtitles: "captions.bubble"
+            case .network: "dot.radiowaves.left.and.right"
             }
         }
     }
@@ -47,9 +65,12 @@ struct SettingsView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
                         switch pane {
+                        case .interface: InterfacePane()
                         case .playback: PlaybackPane()
+                        case .video: VideoPane()
                         case .audio: AudioPane()
                         case .subtitles: SubtitlesPane()
+                        case .network: NetworkPane()
                         }
                     }
                     .padding(.horizontal, 24)
@@ -74,11 +95,13 @@ struct SettingsView: View {
 
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Media")
-                .foregroundStyle(Theme.textMuted)
-                .padding(.horizontal, 10)
-                .frame(height: 33, alignment: .center)
             ForEach(Pane.allCases) { item in
+                if item == Pane.allCases.first(where: { $0.group == item.group }) {
+                    Text(item.group)
+                        .foregroundStyle(Theme.textMuted)
+                        .padding(.horizontal, 10)
+                        .frame(height: 33, alignment: .center)
+                }
                 let isSelected = pane == item
                 Button { pane = item } label: {
                     HStack(spacing: 8) {
@@ -206,6 +229,111 @@ private struct SubtitlesPane: View {
         SettingsSection("Sync") {
             SettingsRow("Subtitle delay", info: "Positive values show subtitles later.") {
                 DelayField(milliseconds: $settings.subtitleDelay, step: 100, label: "Subtitle delay")
+            }
+        }
+    }
+}
+
+private struct InterfacePane: View {
+    @Environment(SettingsStore.self) private var settings
+
+    var body: some View {
+        @Bindable var settings = settings
+        SettingsSection("Library") {
+            SettingsRow("Start screen", info: "What the library shows when Cone Player opens.") {
+                Dropdown(
+                    selection: $settings.startScreen,
+                    options: LibrarySection.allCases.map { ($0, $0.rawValue) },
+                    label: "Start screen"
+                )
+            }
+            SettingsRow("Layout", info: "Grid with thumbnails, or a compact list.") {
+                SegmentedValues(selection: $settings.libraryLayout, options: SettingsStore.LibraryLayout.allCases) { $0.rawValue }
+            }
+        }
+        SettingsSection("Player") {
+            SettingsRow("Show miniplayer while browsing", info: "Keeps what's playing visible in the corner of the library.") {
+                OnOffToggle(isOn: $settings.showsMiniplayer, label: "Show miniplayer while browsing")
+            }
+        }
+    }
+}
+
+private struct VideoPane: View {
+    @Environment(SettingsStore.self) private var settings
+
+    var body: some View {
+        @Bindable var settings = settings
+        SettingsSection("Display") {
+            SettingsRow("Fit", info: "How video is scaled to the window.") {
+                Dropdown(
+                    selection: $settings.videoFit,
+                    options: SettingsStore.VideoFit.allCases.map { ($0, $0.rawValue) },
+                    label: "Fit"
+                )
+            }
+            SettingsRow("Aspect ratio", info: "Override the file's aspect ratio.") {
+                Dropdown(
+                    selection: $settings.aspectRatio,
+                    options: SettingsStore.aspectRatios.map { ($0, $0.isEmpty ? "Default" : $0) },
+                    label: "Aspect ratio"
+                )
+            }
+            SettingsRow("Deinterlace", info: "Removes comb lines from interlaced video such as TV recordings.") {
+                SegmentedValues(selection: $settings.deinterlace, options: SettingsStore.Deinterlace.allCases) { $0.rawValue }
+            }
+        }
+        SettingsSection("Colors") {
+            SettingsRow("Adjust colors", info: "VLC's image adjust filter.") {
+                HStack(spacing: 12) {
+                    Button("Reset") { settings.resetColorAdjustments() }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Theme.textSecondary)
+                        .focusEffectDisabled()
+                    OnOffToggle(isOn: $settings.isColorAdjustEnabled, label: "Adjust colors")
+                }
+            }
+            Group {
+                SettingsRow("Brightness", info: "1 is unchanged.") {
+                    ValueSlider(value: $settings.brightness, range: 0...2, label: "Brightness")
+                }
+                SettingsRow("Contrast", info: "1 is unchanged.") {
+                    ValueSlider(value: $settings.contrast, range: 0...2, label: "Contrast")
+                }
+                SettingsRow("Saturation", info: "0 is black and white; 1 is unchanged.") {
+                    ValueSlider(value: $settings.saturation, range: 0...3, label: "Saturation")
+                }
+                SettingsRow("Hue", info: "Rotates colors, in degrees.") {
+                    ValueSlider(value: $settings.hue, range: -180...180, step: 1, label: "Hue")
+                }
+                SettingsRow("Gamma", info: "1 is unchanged.") {
+                    ValueSlider(value: $settings.gamma, range: 0.01...10, label: "Gamma")
+                }
+            }
+            .disabled(!settings.isColorAdjustEnabled)
+            .opacity(settings.isColorAdjustEnabled ? 1 : 0.5)
+        }
+    }
+}
+
+private struct NetworkPane: View {
+    @Environment(SettingsStore.self) private var settings
+
+    var body: some View {
+        @Bindable var settings = settings
+        SettingsSection("Streaming") {
+            SettingsRow("Network caching", info: "How much VLC buffers before playing a stream. More is smoother on slow connections, but starts later.") {
+                NotchedSlider(
+                    value: $settings.networkCaching,
+                    stops: [300, 1000, 3000, 5000, 10000],
+                    label: { ($0 / 1000).formatted() + "s" },
+                    accessibilityLabel: "Network caching"
+                )
+            }
+        }
+        SettingsSection("History") {
+            SettingsRow("Keep streams in Recent", info: "Remember network streams you open in Recent and Network.") {
+                OnOffToggle(isOn: $settings.keepsStreamsInRecent, label: "Keep streams in Recent")
             }
         }
     }
@@ -433,6 +561,58 @@ private struct NotchedSlider: View {
             switch direction {
             case .increment: value = stops[min(index + 1, stops.count - 1)]
             case .decrement: value = stops[max(index - 1, 0)]
+            @unknown default: break
+            }
+        }
+    }
+}
+
+/// Continuous version of the Figma's range control: well, dark-orange fill, 8×24 thumb,
+/// with the value shown beside it.
+private struct ValueSlider: View {
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    var step: Double = 0.05
+    let label: String
+
+    private var fraction: Double { (value - range.lowerBound) / (range.upperBound - range.lowerBound) }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            GeometryReader { proxy in
+                let width = proxy.size.width - 4
+                let x = 2 + width * fraction
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 6).fill(Theme.well).frame(height: 16)
+                    RoundedRectangle(cornerRadius: 4).fill(Theme.accentWell)
+                        .frame(width: max(x - 2, 0), height: 12)
+                        .offset(x: 2)
+                    RoundedRectangle(cornerRadius: 4).fill(Theme.accentDim)
+                        .frame(width: 8, height: 24)
+                        .offset(x: min(max(x - 4, 0), proxy.size.width - 8))
+                }
+                .frame(height: 24)
+                .contentShape(.rect)
+                .gesture(DragGesture(minimumDistance: 0).onChanged { drag in
+                    let f = min(max((drag.location.x - 2) / width, 0), 1)
+                    let raw = range.lowerBound + f * (range.upperBound - range.lowerBound)
+                    value = (raw / step).rounded() * step
+                })
+            }
+            .frame(height: 24)
+            Text(value, format: .number.precision(.fractionLength(step < 1 ? 2 : 0)))
+                .font(.inter(13).monospacedDigit())
+                .foregroundStyle(Theme.textSecondary)
+                .frame(width: 44, alignment: .trailing)
+        }
+        .accessibilityElement()
+        .accessibilityLabel(label)
+        .accessibilityValue(value.formatted(.number.precision(.fractionLength(2))))
+        .accessibilityAdjustableAction { direction in
+            let delta = (range.upperBound - range.lowerBound) / 20
+            switch direction {
+            case .increment: value = min(value + delta, range.upperBound)
+            case .decrement: value = max(value - delta, range.lowerBound)
             @unknown default: break
             }
         }

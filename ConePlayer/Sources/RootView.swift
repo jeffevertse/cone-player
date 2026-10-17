@@ -15,7 +15,7 @@ struct RootView: View {
                         Sidebar()
                         LibraryScreen()
                     }
-                    if player.current != nil {
+                    if player.current != nil && player.settings.showsMiniplayer {
                         Miniplayer()
                             .padding(6)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
