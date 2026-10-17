@@ -19,13 +19,15 @@ Cone Player is an independent project. It is not affiliated with or endorsed by 
 - Plays any video or audio file VLC can play (File › Open, drag and drop, or Open With in Finder)
 - Library of videos and music from `~/Movies` and `~/Music`, browsable by folder with a breadcrumb and back/forward, as a grid or list, with Quick Look thumbnails, sorting and search
 - Resume playback: remembers where you stopped, offers "You've watched till …" (or resumes automatically, per Settings), and shows progress bars and dimmed names for watched files
+- Recent: everything you've played, newest first, including files outside Movies/Music (kept reachable with security-scoped bookmarks)
+- Playlists: create, rename and delete; add files from the right-click menu; Play All plays the playlist in order
 - Floating miniplayer over the library with a live video preview
 - Player screens from the Figma: video, and "Player – Music" with blurred artwork and waveform progress bar
 - Control bar: previous/next through the library list, ±10s, play/pause, seek, VLC's 0–200% wedge volume, audio track and subtitle menus, queue
 - Settings (⌘,): continue where you left off (Ask/Always/Never), playback speed, jump interval, auto-play next, audio and subtitle delay, subtitle size, preferred audio/subtitle language, and VLC's 10-band equalizer with presets
 - Keyboard: Space play/pause, ⌘← / ⌘→ jump 10s, ⌥⌘← / ⌥⌘→ previous/next, ⌘1 Library, ⌘2 Player, ⌘[ / ⌘] back/forward, ⌘F search, ⌘. stop
 
-Planned next: more Settings panes (video, interface, network), playlists, network streams, recent items, Light theme.
+Planned next: more Settings panes (video, interface, network), network streams, Home view, Light theme.
 
 ## Design notes
 

@@ -3,15 +3,22 @@ import Observation
 enum LibrarySection: String, CaseIterable, Identifiable {
     case videos = "Videos"
     case music = "Music"
+    case playlists = "Playlists"
+    case recent = "Recent"
 
     var id: Self { self }
 
     var systemImage: String {
         switch self {
         case .videos: "play.rectangle"
-        case .music: "music.note.list"
+        case .music: "music.note"
+        case .playlists: "list.triangle"
+        case .recent: "clock.arrow.circlepath"
         }
     }
+
+    /// Videos and Music are browsed by folder; Playlists and Recent aren't.
+    var hasFolders: Bool { self == .videos || self == .music }
 }
 
 /// Which screen the window shows: the library (with the miniplayer) or the full player.

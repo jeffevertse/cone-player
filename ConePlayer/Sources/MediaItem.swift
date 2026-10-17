@@ -34,4 +34,8 @@ struct MediaItem: Identifiable, Hashable, Sendable {
         let values = try? url.resourceValues(forKeys: [.addedToDirectoryDateKey, .creationDateKey])
         dateAdded = values?.addedToDirectoryDate ?? values?.creationDate ?? .distantPast
     }
+
+    // The same file is the same item, whether it came from the library, Recent or a playlist.
+    static func == (lhs: MediaItem, rhs: MediaItem) -> Bool { lhs.url.path == rhs.url.path }
+    func hash(into hasher: inout Hasher) { hasher.combine(url.path) }
 }

@@ -11,6 +11,9 @@ final class ThumbnailStore {
 
     func load(_ url: URL) async {
         guard requested.insert(url).inserted else { return }
+        // Files reopened from a bookmark (Recent, playlists) need sandbox access to preview.
+        let didAccess = url.startAccessingSecurityScopedResource()
+        defer { if didAccess { url.stopAccessingSecurityScopedResource() } }
         let request = QLThumbnailGenerator.Request(
             fileAt: url,
             size: CGSize(width: 316, height: 178),

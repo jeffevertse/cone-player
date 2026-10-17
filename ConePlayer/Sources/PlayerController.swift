@@ -84,6 +84,21 @@ final class PlayerController {
     func play(_ item: MediaItem, in queue: [MediaItem]? = nil) {
         saveProgress()
         beginAccess(to: item.url)
+        // A file from Recent or a playlist that was saved without a bookmark, or that
+        // moved, can't be read; say so instead of showing a silent black screen.
+        guard FileManager.default.isReadableFile(atPath: item.url.path) else {
+            player.stop()
+            if let queue { self.queue = queue }
+            current = item
+            displayTitle = item.title
+            artwork = nil
+            isPlaying = false
+            position = 0
+            elapsed = .zero
+            resumeOffer = nil
+            errorMessage = "Cone Player can't read “\(item.fileName)”. Open it again with File › Open to give it access."
+            return
+        }
         guard let media = VLCMedia(url: item.url) else {
             errorMessage = "Cone Player can't open \(item.fileName)."
             return

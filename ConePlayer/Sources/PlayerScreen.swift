@@ -18,7 +18,10 @@ struct PlayerScreen: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(.black)
             .overlay(alignment: .bottom) {
-                if let offer = player.resumeOffer {
+                if let message = player.errorMessage {
+                    MessageBanner(text: message)
+                        .padding(.bottom, 24)
+                } else if let offer = player.resumeOffer {
                     ResumeBanner(time: offer)
                         .padding(.bottom, 24)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -123,5 +126,21 @@ private struct ResumeBanner: View {
         .padding(.vertical, 10)
         .background(Theme.panel.opacity(0.95), in: .rect(cornerRadius: 16))
         .shadow(color: .black.opacity(0.4), radius: 16, y: 6)
+    }
+}
+
+/// Same pill as the resume banner, for messages without an action.
+private struct MessageBanner: View {
+    let text: String
+
+    var body: some View {
+        Label(text, systemImage: "exclamationmark.triangle")
+            .font(.inter(15))
+            .foregroundStyle(Theme.textBright)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .background(Theme.panel.opacity(0.95), in: .rect(cornerRadius: 16))
+            .shadow(color: .black.opacity(0.4), radius: 16, y: 6)
+            .padding(.horizontal, 40)
     }
 }

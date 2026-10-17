@@ -28,7 +28,13 @@ struct Miniplayer: View {
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
                 HStack(spacing: 20) {
-                    if let folder = player.current?.folderName {
+                    if player.errorMessage != nil {
+                        Label("Can't read this file", systemImage: "exclamationmark.triangle")
+                            .font(.inter(14))
+                            .foregroundStyle(Theme.accent)
+                            .lineLimit(1)
+                            .help(player.errorMessage ?? "")
+                    } else if let folder = player.current?.folderName {
                         Label(folder, systemImage: "folder")
                             .font(.inter(14))
                             .foregroundStyle(Theme.textSecondary)
