@@ -20,6 +20,9 @@ final class PlayerController {
     private(set) var errorMessage: String?
     /// Set while the "You've watched till …" banner offers to resume.
     private(set) var resumeOffer: Duration?
+    private(set) var isRecording = false
+    /// The last finished recording, shown in a "Saved recording" banner.
+    private(set) var savedRecording: URL?
 
     /// "Artist - Title" from the file's metadata, falling back to the file name.
     private(set) var displayTitle = ""
@@ -63,6 +66,7 @@ final class PlayerController {
     private var terminationObserver: (any NSObjectProtocol)?
     /// The file whose sandbox access we hold; see `beginAccess(to:)`.
     private var accessedURL: URL?
+    @ObservationIgnored private lazy var delegateBridge = PlayerDelegateBridge(controller: self)
 
     let settings: SettingsStore
     let history: PlaybackHistory
@@ -71,6 +75,7 @@ final class PlayerController {
         self.settings = settings
         self.history = history
         player.drawable = videoView
+        player.delegate = delegateBridge
         settings.onChange = { [weak self] in self?.applySettings() }
         startPolling()
         // Save the exact position on quit, not just the last 5-second checkpoint.
@@ -198,7 +203,47 @@ final class PlayerController {
         resumeOffer = nil
     }
 
+    // MARK: - Recording
+
+    /// Movies › Cone Player Recordings, the real folder rather than the sandbox container's.
+    static var recordingsFolder: URL {
+        let movies = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.resolvingSymlinksInPath()
+            ?? URL(fileURLWithPath: NSHomeDirectory())
+        return movies.appending(path: "Cone Player Recordings", directoryHint: .isDirectory)
+    }
+
+    func toggleRecording() {
+        guard current != nil else { return }
+        if isRecording {
+            player.stopRecording()
+        } else {
+            let folder = Self.recordingsFolder
+            do {
+                try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            } catch {
+                errorMessage = "Couldn't create the recordings folder: \(error.localizedDescription)"
+                return
+            }
+            savedRecording = nil
+            player.startRecording(atPath: folder.path)
+        }
+    }
+
+    func dismissSavedRecording() {
+        savedRecording = nil
+    }
+
+    fileprivate func recordingStarted() {
+        isRecording = true
+    }
+
+    fileprivate func recordingStopped(at url: URL?) {
+        isRecording = false
+        savedRecording = url
+    }
+
     func stop() {
+        if isRecording { player.stopRecording() }
         saveProgress()
         player.stop()
         beginAccess(to: nil)
@@ -355,5 +400,25 @@ final class PlayerController {
 private extension PlayerController.Track {
     init(_ track: VLCMediaPlayer.Track) {
         self.init(id: track.trackId, name: track.trackName, isSelected: track.isSelected)
+    }
+}
+
+/// Receives VLCKit's recording callbacks (on VLC's threads) and forwards them to the
+/// main actor. Everything else is read by polling.
+private final class PlayerDelegateBridge: NSObject, VLCMediaPlayerDelegate, @unchecked Sendable {
+    private weak var controller: PlayerController?
+
+    @MainActor init(controller: PlayerController) {
+        self.controller = controller
+    }
+
+    @objc(mediaPlayerStartedRecording:)
+    func mediaPlayerStartedRecording(_ player: VLCMediaPlayer) {
+        Task { @MainActor [weak controller] in controller?.recordingStarted() }
+    }
+
+    @objc(mediaPlayer:recordingStoppedAtURL:)
+    func mediaPlayer(_ player: VLCMediaPlayer, recordingStoppedAt url: URL?) {
+        Task { @MainActor [weak controller] in controller?.recordingStopped(at: url) }
     }
 }

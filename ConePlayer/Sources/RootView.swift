@@ -36,6 +36,10 @@ struct RootView: View {
         .onChange(of: player.current) { _, item in
             if item == nil { navigation.screen = .library }
         }
+        // Recordings land in Movies, so show them in Videos.
+        .onChange(of: player.savedRecording) { _, url in
+            if url != nil { library.rescan() }
+        }
         .sheet(item: Binding(get: { dialogs.current }, set: { if $0 == nil { dialogs.dismiss() } })) { dialog in
             VLCDialogSheet(dialog: dialog)
         }

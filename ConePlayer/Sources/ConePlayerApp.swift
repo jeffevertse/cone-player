@@ -95,6 +95,10 @@ struct ConePlayerApp: App {
                 Button("Jump Back \(settings.jumpInterval)s") { player.jumpBack() }
                     .keyboardShortcut(.leftArrow, modifiers: .command)
                 Divider()
+                Button(player.isRecording ? "Stop Recording" : "Start Recording") { player.toggleRecording() }
+                    .keyboardShortcut("r")
+                    .disabled(player.current == nil)
+                Divider()
                 Button("Stop") { player.stop(); navigation.screen = .library }
                     .keyboardShortcut(".")
             }

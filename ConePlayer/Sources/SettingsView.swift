@@ -13,6 +13,7 @@ struct SettingsView: View {
         case library = "Library"
         case network = "Network"
         case performance = "Performance"
+        case recording = "Recording"
 
         var id: Self { self }
 
@@ -21,7 +22,7 @@ struct SettingsView: View {
             switch self {
             case .interface, .privacy, .controls: "App"
             case .playback, .video, .audio, .subtitles, .library: "Media"
-            case .network, .performance: "System"
+            case .network, .performance, .recording: "System"
             }
         }
 
@@ -32,6 +33,7 @@ struct SettingsView: View {
             case .controls: "Keyboard Shortcuts"
             case .library: "Library"
             case .performance: "Performance"
+            case .recording: "Recording"
             case .playback: "Playback Preferences"
             case .video: "Video Defaults"
             case .audio: "Audio Defaults"
@@ -47,6 +49,7 @@ struct SettingsView: View {
             case .controls: "keyboard"
             case .library: "folder"
             case .performance: "gauge.with.dots.needle.67percent"
+            case .recording: "record.circle"
             case .playback: "play"
             case .video: "film"
             case .audio: "waveform"
@@ -82,6 +85,7 @@ struct SettingsView: View {
                         case .controls: ControlsPane()
                         case .library: LibraryPane()
                         case .performance: PerformancePane()
+                        case .recording: RecordingPane()
                         case .playback: PlaybackPane()
                         case .video: VideoPane()
                         case .audio: AudioPane()
@@ -439,6 +443,32 @@ private struct PerformancePane: View {
     }
 }
 
+private struct RecordingPane: View {
+    var body: some View {
+        SettingsSection("Recordings") {
+            SettingsRow("Save to", info: "Recordings appear in the library under Videos › Cone Player Recordings.") {
+                HStack(spacing: 12) {
+                    Text("Movies › Cone Player Recordings")
+                        .foregroundStyle(Theme.textPrimary)
+                        .lineLimit(1)
+                    Button("Show") {
+                        let folder = PlayerController.recordingsFolder
+                        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                        NSWorkspace.shared.activateFileViewerSelecting([folder])
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Theme.accentText)
+                    .focusEffectDisabled()
+                }
+            }
+            SettingsRow("How to record", info: "VLC copies the stream as it plays, without re-encoding, so a recording starts at the next keyframe (up to a few seconds later in some files).") {
+                Text("Record button or ⌘R while playing")
+                    .foregroundStyle(Theme.textMuted)
+            }
+        }
+    }
+}
+
 /// Read-only list of the app's keyboard shortcuts.
 private struct ControlsPane: View {
     private let groups: [(String, [(String, String)])] = [
@@ -447,6 +477,7 @@ private struct ControlsPane: View {
             ("Jump forward / back", "⌘→  ⌘←"),
             ("Next / Previous", "⌥⌘→  ⌥⌘←"),
             ("Stop", "⌘."),
+            ("Start / Stop Recording", "⌘R"),
             ("Continue where you left off", "Return"),
         ]),
         ("Navigation", [

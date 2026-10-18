@@ -35,6 +35,11 @@ struct ControlBar: View {
             }
 
             HStack(spacing: 12) {
+                IconButton(
+                    player.isRecording ? "record.circle.fill" : "record.circle",
+                    label: player.isRecording ? "Stop Recording" : "Start Recording",
+                    tint: player.isRecording ? .red : Theme.textSecondary
+                ) { player.toggleRecording() }
                 trackMenu("waveform", label: "Audio Track", tracks: player.audioTracks, allowsOff: false) {
                     player.selectAudioTrack($0 ?? "")
                 }

@@ -21,6 +21,9 @@ struct PlayerScreen: View {
                 if let message = player.errorMessage {
                     MessageBanner(text: message)
                         .padding(.bottom, 24)
+                } else if let recording = player.savedRecording {
+                    RecordingBanner(url: recording)
+                        .padding(.bottom, 24)
                 } else if let offer = player.resumeOffer {
                     ResumeBanner(time: offer)
                         .padding(.bottom, 24)
@@ -142,5 +145,53 @@ private struct MessageBanner: View {
             .background(Theme.panel.opacity(0.95), in: .rect(cornerRadius: 16))
             .shadow(color: .black.opacity(0.4), radius: 16, y: 6)
             .padding(.horizontal, 40)
+    }
+}
+
+/// "Saved recording" with Show in Finder, after a recording stops.
+private struct RecordingBanner: View {
+    let url: URL
+    @Environment(PlayerController.self) private var player
+
+    var body: some View {
+        HStack(spacing: 20) {
+            Label("Saved recording “\(url.lastPathComponent)”", systemImage: "record.circle")
+                .font(.inter(15))
+                .foregroundStyle(Theme.textBright)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Button {
+                NSWorkspace.shared.activateFileViewerSelecting([url])
+            } label: {
+                Text("Show in Finder")
+                    .font(.inter(14, .semibold))
+                    .foregroundStyle(Theme.onAccent)
+                    .padding(.horizontal, 10)
+                    .frame(height: 32)
+                    .background(Theme.accent, in: .rect(cornerRadius: 6))
+            }
+            .buttonStyle(.plain)
+            .focusEffectDisabled()
+            Button { player.dismissSavedRecording() } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Theme.textMuted)
+                    .frame(width: 20, height: 20)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .focusEffectDisabled()
+            .accessibilityLabel("Dismiss")
+        }
+        .padding(.leading, 20)
+        .padding(.trailing, 12)
+        .padding(.vertical, 10)
+        .background(Theme.panel.opacity(0.95), in: .rect(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.4), radius: 16, y: 6)
+        .padding(.horizontal, 40)
+        .task(id: url) {
+            try? await Task.sleep(for: .seconds(8))
+            player.dismissSavedRecording()
+        }
     }
 }
