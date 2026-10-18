@@ -28,6 +28,7 @@ struct NetworkStreamSheet: View {
                     .font(.inter(14))
                     .foregroundStyle(Theme.textSecondary)
                 TextField("https://, rtsp://, rtmp://, udp://…", text: $address)
+                    .accessibilityIdentifier("stream.url")
                     .textFieldStyle(.plain)
                     .font(.inter(14))
                     .foregroundStyle(Theme.textPrimary)
@@ -40,6 +41,7 @@ struct NetworkStreamSheet: View {
                     .onChange(of: address) { problem = nil }
                 if let problem {
                     Text(problem)
+                        .accessibilityIdentifier("stream.problem")
                         .font(.inter(12))
                         .foregroundStyle(Theme.accentText)
                 }

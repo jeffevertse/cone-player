@@ -67,6 +67,7 @@ struct SettingsView: View {
             HStack(spacing: 0) {
                 Color.clear.frame(width: 216)
                 Text(pane.title)
+                    .accessibilityIdentifier("settings.title")
                     .font(.inter(16))
                     .foregroundStyle(Theme.textPrimary)
                     .padding(.leading, 24)
@@ -139,6 +140,7 @@ struct SettingsView: View {
                 .buttonStyle(.plain)
                 .focusEffectDisabled()
                 .accessibilityAddTraits(isSelected ? .isSelected : [])
+                .accessibilityIdentifier("settings.\(item.rawValue)")
             }
             Spacer()
         }

@@ -65,6 +65,17 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+  ConePlayerUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - ConePlayerUITests
+    dependencies:
+      - target: ConePlayer
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: ConePlayer
 schemes:
   ConePlayer:
     build:
@@ -76,3 +87,4 @@ schemes:
       config: Debug
       targets:
         - ConePlayerTests
+        - ConePlayerUITests

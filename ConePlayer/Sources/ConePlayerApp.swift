@@ -7,20 +7,23 @@ struct ConePlayerApp: App {
     @State private var settings: SettingsStore
     @State private var player: PlayerController
     @State private var history: PlaybackHistory
-    @State private var playlists = PlaylistStore()
+    @State private var playlists: PlaylistStore
     @State private var networkBrowser = NetworkBrowser()
     @State private var dialogs = DialogCenter()
-    @State private var library = MediaLibrary()
+    @State private var library: MediaLibrary
     @State private var thumbnails = ThumbnailStore()
     @State private var navigation: Navigation
 
     init() {
-        let settings = SettingsStore()
+        let defaults = UITesting.isEnabled ? UITesting.freshDefaults() : .standard
+        let settings = SettingsStore(defaults: defaults)
         _settings = State(initialValue: settings)
+        _playlists = State(initialValue: PlaylistStore(defaults: defaults))
+        _library = State(initialValue: MediaLibrary(defaults: defaults, includesStandardFolders: !UITesting.isEnabled))
         let navigation = Navigation()
         navigation.section = settings.startScreen
         _navigation = State(initialValue: navigation)
-        let history = PlaybackHistory()
+        let history = PlaybackHistory(defaults: defaults)
         _history = State(initialValue: history)
         _player = State(initialValue: PlayerController(settings: settings, history: history))
     }
@@ -119,5 +122,17 @@ struct ConePlayerApp: App {
         guard let first = items.first else { return }
         player.play(first, in: items)
         navigation.screen = .player
+    }
+}
+
+/// UI tests launch the app with `-UITesting`: it then starts from empty preferences of
+/// its own and skips Movies/Music, so tests are repeatable and never touch real data.
+enum UITesting {
+    static let isEnabled = ProcessInfo.processInfo.arguments.contains("-UITesting")
+
+    static func freshDefaults() -> UserDefaults {
+        let suite = "com.jeffevertse.ConePlayer.UITesting"
+        UserDefaults.standard.removePersistentDomain(forName: suite)
+        return UserDefaults(suiteName: suite) ?? .standard
     }
 }

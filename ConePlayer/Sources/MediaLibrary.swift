@@ -17,10 +17,13 @@ final class MediaLibrary {
     /// can be scanned, previewed and played.
     @ObservationIgnored private var accessedFolders: [String: URL] = [:]
     @ObservationIgnored private var scanTask: Task<Void, Never>?
+    @ObservationIgnored private let includesStandardFolders: Bool
     private static let foldersKey = "libraryFolders"
 
-    init(defaults: UserDefaults = .standard) {
+    /// `includesStandardFolders` is false only for UI tests, which shouldn't scan the user's files.
+    init(defaults: UserDefaults = .standard, includesStandardFolders: Bool = true) {
         self.defaults = defaults
+        self.includesStandardFolders = includesStandardFolders
         if let data = defaults.data(forKey: Self.foldersKey),
            let saved = try? JSONDecoder().decode([FileReference].self, from: data) {
             customFolders = saved
@@ -56,7 +59,7 @@ final class MediaLibrary {
         isScanning = true
         defer { isScanning = false }
 
-        let standard: [FileManager.SearchPathDirectory] = [.moviesDirectory, .musicDirectory]
+        let standard: [FileManager.SearchPathDirectory] = includesStandardFolders ? [.moviesDirectory, .musicDirectory] : []
         var roots: [(url: URL, prefix: String?)] = standard.compactMap {
             FileManager.default.urls(for: $0, in: .userDomainMask).first.map { ($0.resolvingSymlinksInPath(), nil) }
         }

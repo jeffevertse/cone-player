@@ -14,6 +14,7 @@ struct PlaylistList: View {
                 Button { isCreating = true } label: {
                     row(icon: "plus", title: "Create playlist", color: Theme.textMuted)
                 }
+                .accessibilityIdentifier("playlists.create")
                 .buttonStyle(.plain)
                 .focusEffectDisabled()
 
@@ -30,6 +31,7 @@ struct PlaylistList: View {
                         .buttonStyle(.plain)
                         .focusEffectDisabled()
                         .accessibilityLabel("Open playlist \(playlist.name)")
+                        .accessibilityIdentifier("playlist.\(playlist.name)")
 
                         PlaylistActions(playlist: playlist) {
                             Image(systemName: "ellipsis")
@@ -136,6 +138,7 @@ struct PlaylistNameSheet: View {
                 .font(.inter(16, .medium))
                 .foregroundStyle(Theme.textBright)
             TextField("Playlist name", text: $name)
+                .accessibilityIdentifier("playlistName.field")
                 .textFieldStyle(.plain)
                 .font(.inter(14))
                 .foregroundStyle(Theme.textPrimary)
@@ -162,6 +165,7 @@ struct PlaylistNameSheet: View {
                 }
                 .buttonStyle(.plain)
                 .keyboardShortcut(.defaultAction)
+                .accessibilityIdentifier("playlistName.confirm")
             }
         }
         .padding(24)

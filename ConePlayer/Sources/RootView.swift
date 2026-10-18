@@ -185,6 +185,7 @@ private struct Sidebar: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityIdentifier("sidebar.\(title)")
     }
 }
 

@@ -358,6 +358,7 @@ private struct Breadcrumb: View {
         }
         .buttonStyle(.plain)
         .focusEffectDisabled()
+        .accessibilityIdentifier(isLast ? "breadcrumb.current" : "breadcrumb.\(title)")
         // Not .disabled: that would grey out the current folder's name.
         .allowsHitTesting(!isLast)
         .accessibilityAddTraits(isLast ? .isSelected : [])

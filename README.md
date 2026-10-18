@@ -32,7 +32,7 @@ Cone Player is an independent project. It is not affiliated with or endorsed by 
 - Settings (⌘,): Library (add folders, rescan), Privacy (history on/off, clear), Performance (hardware decoding), Recording, Keyboard Shortcuts, Interface (theme, start screen, grid/list, miniplayer), Video (fit, aspect ratio, deinterlace, color adjustments), Network (stream caching, keep streams in Recent), plus continue where you left off (Ask/Always/Never), playback speed, jump interval, auto-play next, audio and subtitle delay, subtitle size, preferred audio/subtitle language, and VLC's 10-band equalizer with presets
 - Keyboard: Space play/pause, ⌘← / ⌘→ jump 10s, ⌥⌘← / ⌥⌘→ previous/next, ⌘1 Library, ⌘2 Player, ⌘[ / ⌘] back/forward, ⌘F search, ⌘N open stream, ⌘. stop
 
-Planned next: UI tests, Developer ID signing and notarization.
+Planned next: Developer ID signing and notarization.
 
 ## Design notes
 
@@ -64,7 +64,9 @@ Unit tests (Swift Testing) cover the media item model, playback history and resu
 xcodebuild test -project ConePlayer.xcodeproj -scheme ConePlayer -destination 'platform=macOS'
 ```
 
-Each test uses its own temporary preferences, so running them doesn't touch your history, playlists or settings.
+UI tests (XCUITest) launch the app and click through Home, the sidebar sections, creating a playlist, the network stream dialog and the Settings panes. They start the app with `-UITesting YES`, which makes it use separate, empty preferences and skip scanning Movies/Music.
+
+Both kinds of tests use their own preferences, so running them doesn't touch your history, playlists or settings.
 
 ### Notes
 

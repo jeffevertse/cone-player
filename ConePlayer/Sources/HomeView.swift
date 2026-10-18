@@ -126,6 +126,7 @@ struct HomeView: View {
                 .background(Theme.accent, in: .rect(cornerRadius: 18))
                 .accessibilityHidden(true)
             Text("Welcome to Cone Player")
+                .accessibilityIdentifier("home.welcome")
                 .font(.inter(24, .medium))
                 .foregroundStyle(Theme.textBright)
             Text("Add videos to Movies and music to Music, or open something now.")
