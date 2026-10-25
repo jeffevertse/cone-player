@@ -51,6 +51,8 @@
 		<string>_rtsp._tcp</string>
 		<string>_http._tcp</string>
 	</array>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 Jeff Evertse. GPL-3.0-or-later. Uses VLCKit (LGPL) and Inter (OFL); see Contents/Resources/Licenses.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Cone Player looks for media servers and shared folders on your network so you can play their videos and music.</string>
 </dict>

@@ -27,12 +27,16 @@ targets:
       - path: ConePlayer/Resources/Fonts
         type: folder
         buildPhase: resources
+      - path: ConePlayer/Resources/Licenses
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: VLCKit
     info:
       path: ConePlayer/Info.plist
       properties:
         CFBundleDisplayName: Cone Player
+        NSHumanReadableCopyright: "© 2026 Jeff Evertse. GPL-3.0-or-later. Uses VLCKit (LGPL) and Inter (OFL); see Contents/Resources/Licenses."
         ATSApplicationFontsPath: Fonts
         NSLocalNetworkUsageDescription: Cone Player looks for media servers and shared folders on your network so you can play their videos and music.
         NSBonjourServices: [_smb._tcp, _afpovertcp._tcp, _nfs._tcp, _ftp._tcp, _sftp-ssh._tcp, _daap._tcp, _rtsp._tcp, _http._tcp]

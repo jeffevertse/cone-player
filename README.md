@@ -56,6 +56,16 @@ Then run the **ConePlayer** scheme. The Xcode project is generated from `project
 
 The app signs with an Apple Development certificate from team `2C39YHVFA2` (set in `project.yml`). A stable signature lets macOS remember the Movies/Music permission between builds. To build under another team, change `DEVELOPMENT_TEAM`.
 
+### Releasing
+
+`scripts/release.sh` archives a Release build, exports it signed with the Developer ID certificate, checks the signature and builds a signed `build/release/ConePlayer-<version>.dmg`. Add `--notarize` to submit the DMG to Apple's notary service and staple the result:
+
+```bash
+scripts/release.sh --notarize
+```
+
+Notarizing uses a Keychain profile named `ConePlayer`, created once with `xcrun notarytool store-credentials "ConePlayer" --apple-id <apple-id> --team-id 2C39YHVFA2`. The app bundles its own license and those of VLCKit and Inter in `Contents/Resources/Licenses`.
+
 ### Tests
 
 Unit tests (Swift Testing) cover the media item model, playback history and resume rules, playlists, settings persistence and equalizer presets, folder navigation and stream address validation. Run them with ⌘U in Xcode, or:

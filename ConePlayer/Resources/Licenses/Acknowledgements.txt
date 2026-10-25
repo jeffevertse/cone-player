@@ -1,0 +1,21 @@
+Cone Player
+Copyright © 2026 Jeff Evertse
+Licensed under the GNU General Public License v3.0 or later (ConePlayer-GPL-3.0.txt).
+Source code: https://github.com/jeffevertse/cone-player
+
+Cone Player is an independent project. It is not affiliated with or endorsed by
+VideoLAN. "VLC" is a trademark of VideoLAN.
+
+Third-party components
+----------------------
+
+VLCKit 4.0.0-a25 (includes libVLC and its modules)
+  Copyright © VideoLAN and the VLC authors
+  GNU Lesser General Public License v2.1 or later (VLCKit-LGPL-2.1.txt)
+  Source: https://code.videolan.org/videolan/VLCKit
+
+Inter typeface 4.1
+  Copyright © 2016 The Inter Project Authors (https://github.com/rsms/inter)
+  SIL Open Font License 1.1 (Inter-OFL-1.1.txt)
+
+Design based on the "VLC Redesign (Community)" Figma file.
