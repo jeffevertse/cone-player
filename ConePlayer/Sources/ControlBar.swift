@@ -205,12 +205,12 @@ private struct VolumeWedge: View {
             ZStack(alignment: .leading) {
                 VolumeTrack().fill(Theme.well)
                 ZStack {
-                    // The Figma's ramp runs to 200%; stretch it so a full bar (the Mac at
-                    // 100%) shows the component's 100% colour rather than the boost red.
+                    // The Figma's full green → red ramp spans the bar, so the Mac at 100%
+                    // ends in red, like the component's top state.
                     VolumeFill().fill(
                         LinearGradient(gradient: Theme.volumeGradient,
                                        startPoint: UnitPoint(x: -0.03, y: 0.5),
-                                       endPoint: UnitPoint(x: 1.02 * VolumeScale.gradientStretch, y: 0.5))
+                                       endPoint: UnitPoint(x: 1.02, y: 0.5))
                     )
                     VolumeFill().fill(Color.black.opacity(0.2))
                 }
@@ -262,8 +262,6 @@ enum VolumeScale {
     ]
     /// The Figma's 100% fill width; it becomes the full width here.
     private static let fullWidth = 63.0
-    /// How much wider than the bar the Figma's 0–200% colour ramp is drawn.
-    static let gradientStretch = 88.0 / 63.0
 
     /// 0…1 of the control's width for a volume of 0…100%.
     static func fraction(for volume: Double) -> Double {
