@@ -192,33 +192,37 @@ private struct Waveform: View {
 // MARK: - Volume
 
 /// VLC's wedge volume control: 0–200%, green → red, drawn as a rising triangle.
+/// The Figma's volume component: a tapered dark track with the same taper filled by
+/// VLC's green → red ramp. Drawn to the component's 88×28 geometry and fill scale.
 private struct VolumeWedge: View {
     @Environment(PlayerController.self) private var player
     @State private var scroll = ScrollWheelMonitor()
 
-    private var maximum: Double { player.settings.maximumVolume }
-
     var body: some View {
         GeometryReader { proxy in
             let width = proxy.size.width
+            let filled = width * VolumeScale.fraction(for: player.volume)
             ZStack(alignment: .leading) {
-                Theme.well
-                Wedge().fill(Theme.wedge)
-                // The gradient spans 0…200% whatever the maximum, so red always
-                // means amplification; a lower maximum just shows less of it.
-                Wedge()
-                    .fill(LinearGradient(gradient: Theme.volumeGradient, startPoint: .leading, endPoint: .trailing))
-                    .frame(width: width * SettingsStore.volumeLimit / maximum)
-                    .frame(width: width, alignment: .leading)
-                    .mask(alignment: .leading) {
-                        Rectangle().frame(width: width * player.volume / maximum)
-                    }
+                VolumeTrack().fill(Theme.well)
+                ZStack {
+                    VolumeFill().fill(
+                        LinearGradient(gradient: Theme.volumeGradient,
+                                       startPoint: UnitPoint(x: -0.03, y: 0.5),
+                                       endPoint: UnitPoint(x: 1.02, y: 0.5))
+                    )
+                    VolumeFill().fill(Color.black.opacity(0.2))
+                }
+                .mask(alignment: .leading) {
+                    UnevenRoundedRectangle(topLeadingRadius: 1, bottomLeadingRadius: 1,
+                                           bottomTrailingRadius: 2, topTrailingRadius: 2)
+                        .frame(width: max(filled, 1))
+                }
             }
-            .clipShape(.rect(cornerRadius: 2))
             .contentShape(.rect)
             .gesture(
                 DragGesture(minimumDistance: 0).onChanged { value in
-                    player.volume = (min(max(value.location.x / width, 0), 1) * maximum).rounded()
+                    let fraction = min(max(value.location.x / width, 0), 1)
+                    player.volume = min(VolumeScale.volume(for: fraction), player.settings.maximumVolume).rounded()
                 }
             )
         }
@@ -239,6 +243,77 @@ private struct VolumeWedge: View {
             @unknown default: break
             }
         }
+    }
+}
+
+/// How far the volume fill reaches, from the Figma component's 13 states (fill width out
+/// of 88 pt at 0, 10 … 100, 150 and 200%). 0–100% gets most of the width.
+enum VolumeScale {
+    private static let points: [(volume: Double, width: Double)] = [
+        (0, 1), (10, 7), (20, 14), (30, 20), (40, 26), (50, 33), (60, 41),
+        (70, 48), (80, 53), (90, 58), (100, 63), (150, 75), (200, 88),
+    ]
+    private static let fullWidth = 88.0
+
+    /// 0…1 of the control's width for a volume of 0…200%.
+    static func fraction(for volume: Double) -> Double {
+        let v = min(max(volume, 0), 200)
+        guard v > 0 else { return 0 }
+        return interpolate(v, from: \.volume, to: \.width) / fullWidth
+    }
+
+    /// The volume for a point 0…1 across the control (the inverse of `fraction`).
+    static func volume(for fraction: Double) -> Double {
+        let width = min(max(fraction, 0), 1) * fullWidth
+        guard width > points[0].width else { return 0 }
+        return interpolate(width, from: \.width, to: \.volume)
+    }
+
+    private static func interpolate(_ x: Double, from input: KeyPath<(volume: Double, width: Double), Double>,
+                                    to output: KeyPath<(volume: Double, width: Double), Double>) -> Double {
+        for (a, b) in zip(points, points.dropFirst()) where x <= b[keyPath: input] {
+            let t = (x - a[keyPath: input]) / (b[keyPath: input] - a[keyPath: input])
+            return a[keyPath: output] + t * (b[keyPath: output] - a[keyPath: output])
+        }
+        return points.last![keyPath: output]
+    }
+}
+
+/// The component's track outline (Figma path, 89×28), scaled to the frame.
+private struct VolumeTrack: Shape {
+    func path(in rect: CGRect) -> Path {
+        let sx = rect.width / 89, sy = rect.height / 28
+        func p(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: rect.minX + x * sx, y: rect.minY + y * sy) }
+        var path = Path()
+        path.move(to: p(3.59756, 19.3638))
+        path.addCurve(to: p(0, 15.3841), control1: p(1.55468, 19.1572), control2: p(0, 17.4374))
+        path.addLine(to: p(0, 12.6159))
+        path.addCurve(to: p(3.59756, 8.6362), control1: p(0, 10.5626), control2: p(1.55467, 8.84279))
+        path.addLine(to: p(85.6982, 0.333893))
+        path.addCurve(to: p(89, 3.31867), control1: p(87.4654, 0.155189), control2: p(89, 1.54247))
+        path.addLine(to: p(89, 24.6813))
+        path.addCurve(to: p(85.6982, 27.6661), control1: p(89, 26.4575), control2: p(87.4654, 27.8448))
+        path.closeSubpath()
+        return path
+    }
+}
+
+/// The component's fill shape: the track inset by 1.5 pt (Figma path, 86×25 at 1.5, 1.5).
+private struct VolumeFill: Shape {
+    func path(in rect: CGRect) -> Path {
+        let sx = rect.width / 89, sy = rect.height / 28
+        func p(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: rect.minX + (x + 1.5) * sx, y: rect.minY + (y + 1.5) * sy) }
+        var path = Path()
+        path.move(to: p(1.79183, 16.1875))
+        path.addCurve(to: p(0, 14.1984), control1: p(0.773415, 16.0809), control2: p(0, 15.2223))
+        path.addLine(to: p(0, 10.8016))
+        path.addCurve(to: p(1.79183, 8.81246), control1: p(0, 9.77762), control2: p(0.773416, 8.91904))
+        path.addLine(to: p(83.7918, 0.231086))
+        path.addCurve(to: p(86, 2.22022), control1: p(84.9723, 0.107549), control2: p(86, 1.03331))
+        path.addLine(to: p(86, 22.7798))
+        path.addCurve(to: p(83.7918, 24.7689), control1: p(86, 23.9667), control2: p(84.9723, 24.8924))
+        path.closeSubpath()
+        return path
     }
 }
 
@@ -274,17 +349,6 @@ private final class ScrollWheelMonitor {
             accumulated -= accumulated > 0 ? 1 : -1
         }
         return true
-    }
-}
-
-private struct Wedge: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.minX + 2, y: rect.maxY - 2))
-        path.addLine(to: CGPoint(x: rect.maxX - 2, y: rect.minY + 2))
-        path.addLine(to: CGPoint(x: rect.maxX - 2, y: rect.maxY - 2))
-        path.closeSubpath()
-        return path
     }
 }
 
