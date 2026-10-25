@@ -11,8 +11,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "0.1.1"
+    CURRENT_PROJECT_VERSION: "2"
     # A stable signing identity lets macOS remember privacy permissions between builds.
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     CODE_SIGN_IDENTITY: Apple Development
@@ -38,6 +38,9 @@ targets:
       path: ConePlayer/Info.plist
       properties:
         CFBundleDisplayName: Cone Player
+        # Read from the build settings above, so a version bump only touches one place.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSHumanReadableCopyright: "© 2026 Jeff Evertse. GPL-3.0-or-later. Uses VLCKit (LGPL) and Inter (OFL); see Contents/Resources/Licenses."
         ATSApplicationFontsPath: Fonts
         NSLocalNetworkUsageDescription: Cone Player looks for media servers and shared folders on your network so you can play their videos and music.

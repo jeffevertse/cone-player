@@ -19,7 +19,8 @@ app=$out/export/ConePlayer.app
 dmg=$out/ConePlayer-$version.dmg
 identity="Developer ID Application: Jeff Evertse (2C39YHVFA2)"
 
-rm -rf "$out"
+# Clear only this version's build products; DMGs of earlier versions are kept.
+rm -rf "$archive" "$out/export" "$out/dmg" "$dmg"
 mkdir -p "$out"
 
 echo "==> Generating project"
@@ -35,6 +36,15 @@ echo "==> Exporting with Developer ID"
 xcodebuild -exportArchive -quiet \
   -archivePath "$archive" -exportPath "$out/export" \
   -exportOptionsPlist scripts/ExportOptions.plist -allowProvisioningUpdates
+
+echo "==> Checking the version"
+app_version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")
+build_number=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$app/Contents/Info.plist")
+if [[ "$app_version" != "$version" ]]; then
+  echo "error: the app says version $app_version but project.yml says $version" >&2
+  exit 1
+fi
+echo "Version $app_version (build $build_number)"
 
 echo "==> Verifying the app's signature"
 codesign --verify --deep --strict --verbose=2 "$app"
