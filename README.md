@@ -32,7 +32,8 @@ Cone Player is an independent project. It is not affiliated with or endorsed by 
 - Control bar: previous/next through the library list, ±10s, play/pause, seek, VLC's 0–200% wedge volume, audio track and subtitle menus, queue
 - Light theme: Settings › Interface › Theme switches between Dark (the original design), Light and System
 - Settings (⌘,): Library (add folders, rescan), Privacy (history on/off, clear), Performance (hardware decoding), Recording, Keyboard Shortcuts, Interface (theme, start screen, grid/list, miniplayer), Video (fit, aspect ratio, deinterlace, color adjustments), Network (stream caching, keep streams in Recent), plus continue where you left off (Ask/Always/Never), playback speed, jump interval, auto-play next, audio and subtitle delay, subtitle size, preferred audio/subtitle language, and VLC's 10-band equalizer with presets
-- Keyboard: Space play/pause, ⌘← / ⌘→ jump 10s, ⌥⌘← / ⌥⌘→ previous/next, ⌘1 Library, ⌘2 Player, ⌘[ / ⌘] back/forward, ⌘F search, ⌘N open stream, ⌘. stop
+- Volume and media keys: the volume control is your Mac's volume, so the keyboard's volume and mute keys, Control Center and the menu bar move it; play/pause and next/previous media keys, AirPods and Control Center's Now Playing control Cone Player
+- Keyboard: Space play/pause, ⌘← / ⌘→ jump 10s, ⌥⌘← / ⌥⌘→ previous/next, ⌘1 Library, ⌘2 Player, ⌘[ / ⌘] back/forward, ⌘F search, ⌘N open stream, ⌘↑ / ⌘↓ / ⌥⌘↓ Mac volume and mute, ⌘. stop
 
 Planned next: Developer ID signing and notarization.
 

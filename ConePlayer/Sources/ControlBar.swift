@@ -205,10 +205,12 @@ private struct VolumeWedge: View {
             ZStack(alignment: .leading) {
                 VolumeTrack().fill(Theme.well)
                 ZStack {
+                    // The Figma's ramp runs to 200%; stretch it so a full bar (the Mac at
+                    // 100%) shows the component's 100% colour rather than the boost red.
                     VolumeFill().fill(
                         LinearGradient(gradient: Theme.volumeGradient,
                                        startPoint: UnitPoint(x: -0.03, y: 0.5),
-                                       endPoint: UnitPoint(x: 1.02, y: 0.5))
+                                       endPoint: UnitPoint(x: 1.02 * VolumeScale.gradientStretch, y: 0.5))
                     )
                     VolumeFill().fill(Color.black.opacity(0.2))
                 }
@@ -222,7 +224,7 @@ private struct VolumeWedge: View {
             .gesture(
                 DragGesture(minimumDistance: 0).onChanged { value in
                     let fraction = min(max(value.location.x / width, 0), 1)
-                    player.volume = min(VolumeScale.volume(for: fraction), player.settings.maximumVolume).rounded()
+                    player.volume = VolumeScale.volume(for: fraction).rounded()
                 }
             )
         }
@@ -232,7 +234,11 @@ private struct VolumeWedge: View {
             scroll.install()
         }
         .onDisappear { scroll.remove() }
-        .help("Volume \(Int(player.volume))% (⌘↑ / ⌘↓, or scroll)")
+        .disabled(!player.canChangeVolume)
+        .opacity(player.canChangeVolume ? 1 : 0.5)
+        .help(player.canChangeVolume
+              ? "Mac volume \(Int(player.volume))% (volume keys, ⌘↑ / ⌘↓, or scroll)"
+              : "This output's volume can't be changed from the Mac")
         .accessibilityElement()
         .accessibilityLabel("Volume")
         .accessibilityValue("\(Int(player.volume)) percent")
@@ -246,18 +252,22 @@ private struct VolumeWedge: View {
     }
 }
 
-/// How far the volume fill reaches, from the Figma component's 13 states (fill width out
-/// of 88 pt at 0, 10 … 100, 150 and 200%). 0–100% gets most of the width.
+/// How far the volume fill reaches for the Mac's volume (0…100%). Uses the Figma
+/// component's 0–100% states (fill width at 0, 10 … 100% out of its 88 pt), stretched
+/// so 100% fills the whole taper.
 enum VolumeScale {
     private static let points: [(volume: Double, width: Double)] = [
         (0, 1), (10, 7), (20, 14), (30, 20), (40, 26), (50, 33), (60, 41),
-        (70, 48), (80, 53), (90, 58), (100, 63), (150, 75), (200, 88),
+        (70, 48), (80, 53), (90, 58), (100, 63),
     ]
-    private static let fullWidth = 88.0
+    /// The Figma's 100% fill width; it becomes the full width here.
+    private static let fullWidth = 63.0
+    /// How much wider than the bar the Figma's 0–200% colour ramp is drawn.
+    static let gradientStretch = 88.0 / 63.0
 
-    /// 0…1 of the control's width for a volume of 0…200%.
+    /// 0…1 of the control's width for a volume of 0…100%.
     static func fraction(for volume: Double) -> Double {
-        let v = min(max(volume, 0), 200)
+        let v = min(max(volume, 0), 100)
         guard v > 0 else { return 0 }
         return interpolate(v, from: \.volume, to: \.width) / fullWidth
     }

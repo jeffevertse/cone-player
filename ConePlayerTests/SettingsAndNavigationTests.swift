@@ -21,43 +21,11 @@ struct SettingsStoreTests {
         #expect(settings.hardwareDecoding)
     }
 
-    @Test func volumeDefaults() {
+    @Test func volumeStepDefaultAndPersistence() {
         let settings = SettingsStore(defaults: storage.defaults)
-        #expect(settings.maximumVolume == 200)
-        #expect(settings.startupVolumeMode == .remember)
         #expect(settings.volumeStep == 5)
-        #expect(settings.initialVolume == 100)
-    }
-
-    @Test func remembersLastVolumeWithoutReapplyingSettings() {
-        let settings = SettingsStore(defaults: storage.defaults)
-        var changes = 0
-        settings.onChange = { changes += 1 }
-        settings.rememberVolume(70)
-        #expect(changes == 0)
-        #expect(SettingsStore(defaults: storage.defaults).initialVolume == 70)
-    }
-
-    @Test func fixedStartupVolume() {
-        let settings = SettingsStore(defaults: storage.defaults)
-        settings.rememberVolume(40)
-        settings.startupVolumeMode = .fixed
-        settings.startupVolume = 120
-        let reopened = SettingsStore(defaults: storage.defaults)
-        #expect(reopened.startupVolumeMode == .fixed)
-        #expect(reopened.initialVolume == 120)
-    }
-
-    @Test func startupVolumeIsClampedToMaximum() {
-        let settings = SettingsStore(defaults: storage.defaults)
-        settings.rememberVolume(180)
-        settings.maximumVolume = 125
-        #expect(settings.initialVolume == 125)
-    }
-
-    @Test func maximumAboveVLCLimitIsCapped() {
-        storage.defaults.set(300.0, forKey: "maximumVolume")
-        #expect(SettingsStore(defaults: storage.defaults).maximumVolume == SettingsStore.volumeLimit)
+        settings.volumeStep = 10
+        #expect(SettingsStore(defaults: storage.defaults).volumeStep == 10)
     }
 
     @Test func privacyAndPerformancePersist() {

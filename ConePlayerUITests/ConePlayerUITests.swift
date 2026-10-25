@@ -85,6 +85,6 @@ final class ConePlayerUITests: XCTestCase {
         }
 
         element("settings.Audio").click()
-        XCTAssertTrue(element("settings.volume.maximum").waitForExistence(timeout: 3), "Volume section missing in Audio")
+        XCTAssertTrue(element("settings.volume.follows").waitForExistence(timeout: 3), "Volume section missing in Audio")
     }
 }

@@ -37,23 +37,18 @@ final class PlayerController {
     }
     var isScrubbing = false
 
-    /// 0…`settings.maximumVolume` (at most 200, libVLC's limit); above 100 amplifies.
-    var volume: Double = 100 {
-        didSet {
-            let clamped = min(max(volume, 0), settings.maximumVolume)
-            guard clamped == volume else {
-                volume = clamped
-                return
-            }
-            player.audio?.volume = Int32(volume.rounded())
-            if volume > 0 { mutedVolume = nil }
-            // While muted, keep remembering the level to come back to, not 0.
-            if mutedVolume == nil { settings.rememberVolume(volume) }
-        }
+    /// The Mac's output volume, 0…100%. It follows the keyboard's volume keys and
+    /// Control Center; setting it changes the Mac's volume. VLC's own gain stays at 100%.
+    var volume: Double {
+        get { systemVolume.isMuted ? 0 : systemVolume.level * 100 }
+        set { systemVolume.setLevel(min(max(newValue, 0), 100) / 100) }
     }
-    var isMuted: Bool { volume == 0 }
-    /// The level before muting, restored by `toggleMute()`.
-    private var mutedVolume: Double?
+    var isMuted: Bool { systemVolume.isMuted || systemVolume.level == 0 }
+    /// False when the current output's volume can't be changed (HDMI, some USB DACs).
+    var canChangeVolume: Bool { systemVolume.canSetVolume }
+    let systemVolume = SystemVolume()
+    /// Media keys and Control Center's Now Playing.
+    @ObservationIgnored private lazy var nowPlaying = NowPlaying(player: self)
 
     /// The view VLC renders video into. There is one for the app's lifetime.
     let videoView: NSView = {
@@ -90,7 +85,7 @@ final class PlayerController {
         player.drawable = videoView
         player.delegate = delegateBridge
         settings.onChange = { [weak self] in self?.applySettings() }
-        volume = settings.initialVolume
+        _ = nowPlaying
         startPolling()
         // Save the exact position on quit, not just the last 5-second checkpoint.
         terminationObserver = NotificationCenter.default.addObserver(
@@ -164,8 +159,23 @@ final class PlayerController {
             media.addOption(":sub-language=\(settings.preferredSubtitleLanguage)")
         }
         player.media = media
-        player.audio?.volume = Int32(volume.rounded())
+        player.audio?.volume = 100
         player.play()
+    }
+
+    /// Plays if paused or stopped (for the Play media key; Play/Pause toggles).
+    func resume() {
+        if !player.isPlaying { togglePlayPause() }
+    }
+
+    func pause() {
+        if player.isPlaying { player.pause() }
+    }
+
+    /// Jumps to an absolute time, e.g. from Control Center's scrubber.
+    func seek(toSeconds seconds: Double) {
+        guard current != nil else { return }
+        player.time = VLCTime(int: Int32(clamping: Int(max(seconds, 0) * 1000)))
     }
 
     func togglePlayPause() {
@@ -220,7 +230,8 @@ final class PlayerController {
     // MARK: - Volume
 
     func volumeUp() {
-        volume = min(volume + Double(settings.volumeStep), settings.maximumVolume)
+        if systemVolume.isMuted { systemVolume.setMuted(false) }
+        volume = min(volume + Double(settings.volumeStep), 100)
     }
 
     func volumeDown() {
@@ -228,16 +239,7 @@ final class PlayerController {
     }
 
     func toggleMute() {
-        if let previous = mutedVolume {
-            mutedVolume = nil
-            volume = previous
-        } else if volume > 0 {
-            mutedVolume = volume
-            volume = 0
-        } else {
-            // Already at 0 without muting: come back to the startup level.
-            volume = max(settings.initialVolume, Double(settings.volumeStep))
-        }
+        systemVolume.setMuted(!systemVolume.isMuted)
     }
 
     // MARK: - Recording
@@ -280,6 +282,7 @@ final class PlayerController {
     }
 
     func stop() {
+        defer { nowPlaying.clear() }
         if isRecording { player.stopRecording() }
         saveProgress()
         player.stop()
@@ -295,8 +298,6 @@ final class PlayerController {
     /// Pushes the current settings into VLC. Delays and subtitle size only stick
     /// once a file is playing, so this also runs when playback starts.
     private func applySettings() {
-        // A lowered maximum pulls the current level down with it.
-        if volume > settings.maximumVolume { volume = settings.maximumVolume }
         player.rate = Float(settings.playbackRate)
         player.currentAudioPlaybackDelay = settings.audioDelay * 1000
         player.currentVideoSubTitleDelay = settings.subtitleDelay * 1000
@@ -399,6 +400,7 @@ final class PlayerController {
             }
         }
         refreshMetadata()
+        nowPlaying.update()
     }
 
     /// Files picked in the Open panel or dropped on the window are security-scoped:
