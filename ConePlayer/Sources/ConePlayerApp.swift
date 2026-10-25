@@ -98,6 +98,13 @@ struct ConePlayerApp: App {
                 Button("Jump Back \(settings.jumpInterval)s") { player.jumpBack() }
                     .keyboardShortcut(.leftArrow, modifiers: .command)
                 Divider()
+                Button("Volume Up") { player.volumeUp() }
+                    .keyboardShortcut(.upArrow, modifiers: .command)
+                Button("Volume Down") { player.volumeDown() }
+                    .keyboardShortcut(.downArrow, modifiers: .command)
+                Button(player.isMuted ? "Unmute" : "Mute") { player.toggleMute() }
+                    .keyboardShortcut(.downArrow, modifiers: [.command, .option])
+                Divider()
                 Button(player.isRecording ? "Stop Recording" : "Start Recording") { player.toggleRecording() }
                     .keyboardShortcut("r")
                     .disabled(player.current == nil)

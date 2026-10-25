@@ -37,10 +37,23 @@ final class PlayerController {
     }
     var isScrubbing = false
 
-    /// 0...200 like VLC; anything above 100 amplifies.
+    /// 0…`settings.maximumVolume` (at most 200, libVLC's limit); above 100 amplifies.
     var volume: Double = 100 {
-        didSet { player.audio?.volume = Int32(volume.rounded()) }
+        didSet {
+            let clamped = min(max(volume, 0), settings.maximumVolume)
+            guard clamped == volume else {
+                volume = clamped
+                return
+            }
+            player.audio?.volume = Int32(volume.rounded())
+            if volume > 0 { mutedVolume = nil }
+            // While muted, keep remembering the level to come back to, not 0.
+            if mutedVolume == nil { settings.rememberVolume(volume) }
+        }
     }
+    var isMuted: Bool { volume == 0 }
+    /// The level before muting, restored by `toggleMute()`.
+    private var mutedVolume: Double?
 
     /// The view VLC renders video into. There is one for the app's lifetime.
     let videoView: NSView = {
@@ -77,6 +90,7 @@ final class PlayerController {
         player.drawable = videoView
         player.delegate = delegateBridge
         settings.onChange = { [weak self] in self?.applySettings() }
+        volume = settings.initialVolume
         startPolling()
         // Save the exact position on quit, not just the last 5-second checkpoint.
         terminationObserver = NotificationCenter.default.addObserver(
@@ -203,6 +217,29 @@ final class PlayerController {
         resumeOffer = nil
     }
 
+    // MARK: - Volume
+
+    func volumeUp() {
+        volume = min(volume + Double(settings.volumeStep), settings.maximumVolume)
+    }
+
+    func volumeDown() {
+        volume = max(volume - Double(settings.volumeStep), 0)
+    }
+
+    func toggleMute() {
+        if let previous = mutedVolume {
+            mutedVolume = nil
+            volume = previous
+        } else if volume > 0 {
+            mutedVolume = volume
+            volume = 0
+        } else {
+            // Already at 0 without muting: come back to the startup level.
+            volume = max(settings.initialVolume, Double(settings.volumeStep))
+        }
+    }
+
     // MARK: - Recording
 
     /// Movies › Cone Player Recordings, the real folder rather than the sandbox container's.
@@ -258,6 +295,8 @@ final class PlayerController {
     /// Pushes the current settings into VLC. Delays and subtitle size only stick
     /// once a file is playing, so this also runs when playback starts.
     private func applySettings() {
+        // A lowered maximum pulls the current level down with it.
+        if volume > settings.maximumVolume { volume = settings.maximumVolume }
         player.rate = Float(settings.playbackRate)
         player.currentAudioPlaybackDelay = settings.audioDelay * 1000
         player.currentVideoSubTitleDelay = settings.subtitleDelay * 1000

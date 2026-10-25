@@ -83,5 +83,8 @@ final class ConePlayerUITests: XCTestCase {
             // A SwiftUI Text exposes its string as the accessibility value.
             XCTAssertEqual(title.value as? String ?? title.label, expected)
         }
+
+        element("settings.Audio").click()
+        XCTAssertTrue(element("settings.volume.maximum").waitForExistence(timeout: 3), "Volume section missing in Audio")
     }
 }

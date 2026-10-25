@@ -12,6 +12,14 @@ final class SettingsStore {
         case never = "Never"
     }
 
+    enum StartupVolumeMode: String, CaseIterable {
+        case remember = "Remember last volume"
+        case fixed = "Always starts at"
+    }
+
+    /// libVLC caps volume at 200%, so the Figma's 300% top end isn't offered.
+    static let volumeLimit: Double = 200
+
     enum Deinterlace: String, CaseIterable {
         case automatic = "Automatic"
         case on = "On"
@@ -128,6 +136,32 @@ final class SettingsStore {
     var networkCaching: Double = 1000 { didSet { changed("networkCaching", networkCaching) } }
     var keepsStreamsInRecent = true { didSet { changed("keepsStreamsInRecent", keepsStreamsInRecent) } }
 
+    // MARK: Volume
+
+    /// Top of the control bar's volume wedge, 100…200%.
+    var maximumVolume: Double = 200 { didSet { changed("maximumVolume", maximumVolume) } }
+    var startupVolumeMode: StartupVolumeMode = .remember {
+        didSet { changed("startupVolumeMode", startupVolumeMode.rawValue) }
+    }
+    /// Used when `startupVolumeMode` is `.fixed`.
+    var startupVolume: Double = 100 { didSet { changed("startupVolume", startupVolume) } }
+    /// Percent per ⌘↑ / ⌘↓ or scroll step, 1…25.
+    var volumeStep: Int = 5 { didSet { changed("volumeStep", volumeStep) } }
+    /// The level when the app last quit. Saved without `onChange`, so dragging the
+    /// volume doesn't re-apply every other setting.
+    private(set) var lastVolume: Double = 100
+
+    func rememberVolume(_ volume: Double) {
+        lastVolume = volume
+        defaults.set(volume, forKey: "lastVolume")
+    }
+
+    /// The level to start at, from the startup setting, within 0…`maximumVolume`.
+    var initialVolume: Double {
+        let level = startupVolumeMode == .remember ? lastVolume : startupVolume
+        return min(max(level, 0), maximumVolume)
+    }
+
     // MARK: Subtitles
 
     /// Milliseconds; positive shows subtitles later.
@@ -175,6 +209,11 @@ final class SettingsStore {
         savesHistory = defaults.object(forKey: "savesHistory") as? Bool ?? savesHistory
         hardwareDecoding = defaults.object(forKey: "hardwareDecoding") as? Bool ?? hardwareDecoding
         keepsStreamsInRecent = defaults.object(forKey: "keepsStreamsInRecent") as? Bool ?? keepsStreamsInRecent
+        maximumVolume = min(defaults.object(forKey: "maximumVolume") as? Double ?? maximumVolume, Self.volumeLimit)
+        startupVolumeMode = defaults.string(forKey: "startupVolumeMode").flatMap(StartupVolumeMode.init(rawValue:)) ?? .remember
+        startupVolume = defaults.object(forKey: "startupVolume") as? Double ?? startupVolume
+        volumeStep = defaults.object(forKey: "volumeStep") as? Int ?? volumeStep
+        lastVolume = defaults.object(forKey: "lastVolume") as? Double ?? lastVolume
         subtitleDelay = defaults.object(forKey: "subtitleDelay") as? Int ?? subtitleDelay
         subtitleScale = defaults.object(forKey: "subtitleScale") as? Double ?? subtitleScale
         preferredSubtitleLanguage = defaults.string(forKey: "preferredSubtitleLanguage") ?? ""

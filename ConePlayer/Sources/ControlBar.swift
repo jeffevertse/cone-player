@@ -25,11 +25,17 @@ struct ControlBar: View {
             }
 
             HStack(spacing: 8) {
-                Image(systemName: player.volume == 0 ? "speaker.slash" : "speaker.wave.2")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Theme.textSecondary)
-                    .frame(width: 24)
-                    .accessibilityHidden(true)
+                Button { player.toggleMute() } label: {
+                    Image(systemName: player.isMuted ? "speaker.slash" : "speaker.wave.2")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Theme.textSecondary)
+                        .frame(width: 24, height: 28)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .focusEffectDisabled()
+                .help(player.isMuted ? "Unmute (⌥⌘↓)" : "Mute (⌥⌘↓)")
+                .accessibilityLabel(player.isMuted ? "Unmute" : "Mute")
                 VolumeWedge()
                     .frame(width: 88, height: 28)
             }
@@ -188,38 +194,86 @@ private struct Waveform: View {
 /// VLC's wedge volume control: 0–200%, green → red, drawn as a rising triangle.
 private struct VolumeWedge: View {
     @Environment(PlayerController.self) private var player
+    @State private var scroll = ScrollWheelMonitor()
+
+    private var maximum: Double { player.settings.maximumVolume }
 
     var body: some View {
         GeometryReader { proxy in
-            let fraction = player.volume / 200
+            let width = proxy.size.width
             ZStack(alignment: .leading) {
                 Theme.well
                 Wedge().fill(Theme.wedge)
+                // The gradient spans 0…200% whatever the maximum, so red always
+                // means amplification; a lower maximum just shows less of it.
                 Wedge()
                     .fill(LinearGradient(gradient: Theme.volumeGradient, startPoint: .leading, endPoint: .trailing))
+                    .frame(width: width * SettingsStore.volumeLimit / maximum)
+                    .frame(width: width, alignment: .leading)
                     .mask(alignment: .leading) {
-                        Rectangle().frame(width: proxy.size.width * fraction)
+                        Rectangle().frame(width: width * player.volume / maximum)
                     }
             }
             .clipShape(.rect(cornerRadius: 2))
             .contentShape(.rect)
             .gesture(
                 DragGesture(minimumDistance: 0).onChanged { value in
-                    player.volume = (min(max(value.location.x / proxy.size.width, 0), 1) * 200).rounded()
+                    player.volume = (min(max(value.location.x / width, 0), 1) * maximum).rounded()
                 }
             )
         }
-        .help("Volume \(Int(player.volume))%")
+        .onHover { scroll.isActive = $0 }
+        .onAppear {
+            scroll.onStep = { up in up ? player.volumeUp() : player.volumeDown() }
+            scroll.install()
+        }
+        .onDisappear { scroll.remove() }
+        .help("Volume \(Int(player.volume))% (⌘↑ / ⌘↓, or scroll)")
         .accessibilityElement()
         .accessibilityLabel("Volume")
         .accessibilityValue("\(Int(player.volume)) percent")
         .accessibilityAdjustableAction { direction in
             switch direction {
-            case .increment: player.volume = min(player.volume + 10, 200)
-            case .decrement: player.volume = max(player.volume - 10, 0)
+            case .increment: player.volumeUp()
+            case .decrement: player.volumeDown()
             @unknown default: break
             }
         }
+    }
+}
+
+/// Turns scroll-wheel and trackpad scrolls over the volume wedge into volume steps.
+/// Trackpads send many small deltas, so those are added up before each step.
+@MainActor
+private final class ScrollWheelMonitor {
+    var isActive = false
+    var onStep: (Bool) -> Void = { _ in }
+    private var monitor: Any?
+    private var accumulated: CGFloat = 0
+
+    func install() {
+        guard monitor == nil else { return }
+        monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+            let delta = event.scrollingDeltaY
+            let precise = event.hasPreciseScrollingDeltas
+            let handled = MainActor.assumeIsolated { self?.handle(delta: delta, precise: precise) ?? false }
+            return handled ? nil : event
+        }
+    }
+
+    func remove() {
+        if let monitor { NSEvent.removeMonitor(monitor) }
+        monitor = nil
+    }
+
+    private func handle(delta: CGFloat, precise: Bool) -> Bool {
+        guard isActive, delta != 0 else { return false }
+        accumulated += precise ? delta / 12 : delta
+        while abs(accumulated) >= 1 {
+            onStep(accumulated > 0)
+            accumulated -= accumulated > 0 ? 1 : -1
+        }
+        return true
     }
 }
 

@@ -200,6 +200,33 @@ private struct AudioPane: View {
                 LanguageDropdown(code: $settings.preferredAudioLanguage, label: "Preferred audio language")
             }
         }
+        SettingsSection("Volume") {
+            SettingsRow("Maximum volume", info: "The top of the volume control. Above 100% amplifies; 200% is VLC's limit.") {
+                NotchedSlider(
+                    value: $settings.maximumVolume,
+                    stops: [100, 125, 150, 175, 200],
+                    label: { "\(Int($0))%" },
+                    accessibilityLabel: "Maximum volume"
+                )
+                .accessibilityIdentifier("settings.volume.maximum")
+            }
+            SettingsRow("Startup volume", info: "The volume Cone Player opens with.") {
+                StartupVolumeChoice(
+                    mode: $settings.startupVolumeMode,
+                    volume: $settings.startupVolume,
+                    maximum: settings.maximumVolume
+                )
+            }
+            SettingsRow("Volume step", info: "How much ⌘↑ / ⌘↓ and scrolling over the volume control change the volume.") {
+                StepperField(
+                    value: Binding(get: { Double(settings.volumeStep) }, set: { settings.volumeStep = Int($0) }),
+                    step: 1,
+                    range: 1...25,
+                    format: { "\(Int($0))%" },
+                    label: "Volume step"
+                )
+            }
+        }
         SettingsSection("Sync") {
             SettingsRow("Audio delay", info: "Positive values play the sound later.") {
                 DelayField(milliseconds: $settings.audioDelay, step: 50, label: "Audio delay")
@@ -480,6 +507,8 @@ private struct ControlsPane: View {
             ("Next / Previous", "⌥⌘→  ⌥⌘←"),
             ("Stop", "⌘."),
             ("Start / Stop Recording", "⌘R"),
+            ("Volume up / down", "⌘↑  ⌘↓"),
+            ("Mute", "⌥⌘↓"),
             ("Continue where you left off", "Return"),
         ]),
         ("Navigation", [
@@ -822,6 +851,106 @@ private struct SegmentedValues<Value: Hashable>: View {
         }
         .padding(2)
         .background(Theme.well, in: .rect(cornerRadius: 6))
+    }
+}
+
+/// The Figma's "Values" control for Startup volume: "Remember last volume", or
+/// "Always starts at:" with an inline percent field. The selected row is orange.
+private struct StartupVolumeChoice: View {
+    @Binding var mode: SettingsStore.StartupVolumeMode
+    @Binding var volume: Double
+    let maximum: Double
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Button { mode = .remember } label: {
+                Text("Remember last volume")
+                    .foregroundStyle(mode == .remember ? Theme.accentText : Theme.textMuted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+                    .frame(height: 36)
+                    .background(mode == .remember ? Theme.accentWell : Theme.panel, in: .rect(cornerRadius: 4))
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .focusEffectDisabled()
+            .accessibilityAddTraits(mode == .remember ? .isSelected : [])
+
+            HStack(spacing: 10) {
+                Button { mode = .fixed } label: {
+                    Text("Always starts at:")
+                        .foregroundStyle(mode == .fixed ? Theme.accentText : Theme.textMuted)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(height: 32)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .focusEffectDisabled()
+                .accessibilityAddTraits(mode == .fixed ? .isSelected : [])
+
+                StepperField(
+                    value: $volume,
+                    step: 5,
+                    range: 0...maximum,
+                    format: { "\(Int($0))%" },
+                    label: "Startup volume",
+                    cornerRadius: 2,
+                    onEdit: { mode = .fixed }
+                )
+                .frame(width: 182)
+            }
+            .padding(.leading, 12)
+            .padding(.trailing, 2)
+            .frame(height: 36)
+            .background(mode == .fixed ? Theme.accentWell : Theme.panel, in: .rect(cornerRadius: 4))
+        }
+        .padding(2)
+        .background(Theme.well, in: .rect(cornerRadius: 6))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Startup volume")
+    }
+}
+
+/// A − value + field in the Figma's field style, for small whole numbers.
+private struct StepperField: View {
+    @Binding var value: Double
+    let step: Double
+    let range: ClosedRange<Double>
+    let format: (Double) -> String
+    let label: String
+    var cornerRadius: CGFloat = 6
+    /// Called whenever the value is changed here (e.g. to select the row it sits in).
+    var onEdit: () -> Void = {}
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Button { change(-step) } label: {
+                Image(systemName: "minus").frame(width: 34, height: 32).contentShape(.rect)
+            }
+            .disabled(value <= range.lowerBound)
+            .accessibilityLabel("Decrease \(label)")
+            Text(format(value))
+                .monospacedDigit()
+                .foregroundStyle(Theme.textSecondary)
+                .frame(maxWidth: .infinity)
+            Button { change(step) } label: {
+                Image(systemName: "plus").frame(width: 34, height: 32).contentShape(.rect)
+            }
+            .disabled(value >= range.upperBound)
+            .accessibilityLabel("Increase \(label)")
+        }
+        .buttonStyle(.plain)
+        .focusEffectDisabled()
+        .foregroundStyle(Theme.textSecondary)
+        .background(Theme.well, in: .rect(cornerRadius: cornerRadius))
+        .overlay(RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(Theme.panel))
+        .accessibilityElement(children: .contain)
+        .accessibilityValue(format(value))
+    }
+
+    private func change(_ delta: Double) {
+        value = min(max(value + delta, range.lowerBound), range.upperBound)
+        onEdit()
     }
 }
 
