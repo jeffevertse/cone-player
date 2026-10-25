@@ -59,7 +59,17 @@ staging=$out/dmg
 mkdir -p "$staging"
 cp -R "$app" "$staging/Cone Player.app"
 ln -s /Applications "$staging/Applications"
-hdiutil create -quiet -volname "Cone Player" -srcfolder "$staging" -ov -format UDZO "$dmg"
+# hdiutil sometimes fails with "Resource busy"; retry a few times before giving up.
+for attempt in 1 2 3; do
+  if hdiutil create -quiet -volname "Cone Player" -srcfolder "$staging" -ov -format UDZO "$dmg"; then
+    break
+  elif [[ $attempt == 3 ]]; then
+    echo "error: couldn't create the DMG" >&2
+    exit 1
+  fi
+  echo "hdiutil failed (attempt $attempt), retrying…"
+  sleep 3
+done
 codesign --sign "$identity" --timestamp "$dmg"
 codesign --verify --verbose=2 "$dmg"
 
