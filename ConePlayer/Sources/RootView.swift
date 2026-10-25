@@ -102,15 +102,15 @@ private struct TopBar: View {
     }
 }
 
-/// Cone Player's mark: an orange play glyph (VLC's cone is VideoLAN's trademark).
+/// Cone Player's mark: the cone from the app icon, a sideways cone that doubles as a
+/// play button (deliberately unlike VLC's traffic cone, which is VideoLAN's trademark).
 struct AppMark: View {
     var body: some View {
-        Image(systemName: "play.fill")
-            .font(.system(size: 9, weight: .heavy))
-            .foregroundStyle(Theme.onAccent)
-            .frame(width: 18, height: 18)
-            .background(Theme.accent, in: .rect(cornerRadius: 5))
-            .padding(.horizontal, 7)
+        Image("ConeMark")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 20, height: 20)
+            .padding(.horizontal, 6)
             .accessibilityHidden(true)
     }
 }

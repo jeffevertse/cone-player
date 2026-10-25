@@ -1,3 +1,5 @@
+<img src="docs/images/icon.png" width="128" alt="Cone Player icon">
+
 # Cone Player
 
 A redesigned media player for macOS: VLC's playback engine with a SwiftUI interface built to the [VLC Redesign (Community)](https://www.figma.com/design/RS3geALGlV2J0HCIo5hK5N/VLC-Redesign--Community-) Figma file.
@@ -55,6 +57,10 @@ open ConePlayer.xcodeproj
 Then run the **ConePlayer** scheme. The Xcode project is generated from `project.yml`, so edit that rather than the project file.
 
 The app signs with an Apple Development certificate from team `2C39YHVFA2` (set in `project.yml`). A stable signature lets macOS remember the Movies/Music permission between builds. To build under another team, change `DEVELOPMENT_TEAM`.
+
+### App icon
+
+The icon is vector artwork in `design/icon/`: `ConePlayerIcon.svg` (the app icon) and `ConeMark.svg` (the cone alone, used in the window). After editing either, regenerate the asset catalog with `scripts/make-icon.sh` (needs `brew install librsvg`). The cone lies on its side so it doubles as a play button and doesn't resemble VLC's traffic cone.
 
 ### Releasing
 

@@ -119,11 +119,9 @@ struct HomeView: View {
 
     private var welcome: some View {
         VStack(spacing: 20) {
-            Image(systemName: "play.fill")
-                .font(.system(size: 28, weight: .heavy))
-                .foregroundStyle(Theme.onAccent)
-                .frame(width: 72, height: 72)
-                .background(Theme.accent, in: .rect(cornerRadius: 18))
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .frame(width: 104, height: 104)
                 .accessibilityHidden(true)
             Text("Welcome to Cone Player")
                 .accessibilityIdentifier("home.welcome")

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="540" viewBox="250 242 540 540">
+  <!-- The cone from ConePlayerIcon.svg on its own, for small in-app use (no tile, no shadow). -->
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4A04A"/>
+      <stop offset="0.45" stop-color="#D37918"/>
+      <stop offset="1" stop-color="#9A520C"/>
+    </linearGradient>
+    <linearGradient id="face" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7A3F08"/>
+      <stop offset="1" stop-color="#4A2604"/>
+    </linearGradient>
+  </defs>
+  <path d="M352 276 L764 512 L352 748 A74 236 0 0 1 352 276 Z"
+        fill="url(#body)" stroke="url(#body)" stroke-width="28" stroke-linejoin="round"/>
+  <path d="M370 300 L700 490 L690 506 L362 326 Z" fill="#FFFFFF" fill-opacity="0.18"/>
+  <ellipse cx="352" cy="512" rx="62" ry="222" fill="url(#face)"/>
+  <ellipse cx="352" cy="512" rx="62" ry="222" fill="none" stroke="#F5DDC2" stroke-opacity="0.85" stroke-width="10"/>
+</svg>
