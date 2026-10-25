@@ -59,9 +59,11 @@ staging=$out/dmg
 mkdir -p "$staging"
 cp -R "$app" "$staging/Cone Player.app"
 ln -s /Applications "$staging/Applications"
-# hdiutil sometimes fails with "Resource busy"; retry a few times before giving up.
+# Give hdiutil an explicit size: when it estimates one from the folder it can guess too
+# small and fail with "device full". It can also fail with "Resource busy", so retry.
+size_mb=$(( $(du -sm "$staging" | cut -f1) * 13 / 10 + 20 ))
 for attempt in 1 2 3; do
-  if hdiutil create -quiet -volname "Cone Player" -srcfolder "$staging" -ov -format UDZO "$dmg"; then
+  if hdiutil create -quiet -volname "Cone Player" -srcfolder "$staging" -size "${size_mb}m" -ov -format UDZO "$dmg"; then
     break
   elif [[ $attempt == 3 ]]; then
     echo "error: couldn't create the DMG" >&2
