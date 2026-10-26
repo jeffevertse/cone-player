@@ -55,5 +55,19 @@
 	<string>© 2026 Jeff Evertse. GPL-3.0-or-later. Uses VLCKit (LGPL) and Inter (OFL); see Contents/Resources/Licenses.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Cone Player looks for media servers and shared folders on your network so you can play their videos and music.</string>
+	<key>SUAllowsAutomaticUpdates</key>
+	<true/>
+	<key>SUAutomaticallyUpdate</key>
+	<false/>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUEnableInstallerLauncherService</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string>https://jeffevertse.github.io/cone-player-releases/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>4g0dPV0TeX3k8i8uofjDFQ/tHJKlgEwHH2p6mlnjPfU=</string>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
 </dict>
 </plist>

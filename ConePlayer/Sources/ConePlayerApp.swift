@@ -10,6 +10,7 @@ struct ConePlayerApp: App {
     @State private var playlists: PlaylistStore
     @State private var networkBrowser = NetworkBrowser()
     @State private var dialogs = DialogCenter()
+    @State private var updates = UpdateController()
     @State private var library: MediaLibrary
     @State private var thumbnails = ThumbnailStore()
     @State private var navigation: Navigation
@@ -65,6 +66,10 @@ struct ConePlayerApp: App {
         .windowStyle(.hiddenTitleBar)
         .windowBackgroundDragBehavior(.enabled)
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates…") { updates.checkForUpdates() }
+                    .disabled(!updates.canCheckForUpdates)
+            }
             CommandGroup(replacing: .newItem) {
                 Button("Open File…") { navigation.isImporting = true }
                     .keyboardShortcut("o")
@@ -117,6 +122,7 @@ struct ConePlayerApp: App {
         Settings {
             SettingsView()
                 .environment(settings)
+                .environment(updates)
                 .environment(library)
                 .environment(history)
                 .environment(playlists)

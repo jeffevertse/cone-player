@@ -63,13 +63,20 @@ The app signs with an Apple Development certificate from team `2C39YHVFA2` (set 
 
 The icon is vector artwork in `design/icon/`: `ConePlayerIcon.svg` (the app icon) and `ConeMark.svg` (the cone alone, used in the window). After editing either, regenerate the asset catalog with `scripts/make-icon.sh` (needs `brew install librsvg`). The cone lies on its side so it doubles as a play button and doesn't resemble VLC's traffic cone.
 
+### Updates
+
+Cone Player updates itself with [Sparkle](https://sparkle-project.org): it checks once a day (Settings › Interface › Updates) and asks before installing, and *Cone Player › Check for Updates…* checks right away. The update feed and DMGs are published on the public [cone-player-releases](https://github.com/jeffevertse/cone-player-releases) GitHub Pages site and signed with an EdDSA key kept in the maintainer's Keychain (account `cone-player`).
+
 ### Releasing
 
 `scripts/release.sh` archives a Release build, exports it signed with the Developer ID certificate, checks the signature and builds a signed `build/release/ConePlayer-<version>.dmg`. Add `--notarize` to submit the DMG to Apple's notary service and staple the result:
 
 ```bash
-scripts/release.sh --notarize
+scripts/release.sh --notarize    # build, sign, notarize, staple
+scripts/release.sh --publish     # all of that, then publish to the in-app update feed
 ```
+
+Before `--publish`, bump `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `project.yml` (Sparkle compares build numbers) and write the update notes in `release-notes/<version>.html`.
 
 Notarizing uses a Keychain profile named `ConePlayer`, created once with `xcrun notarytool store-credentials "ConePlayer" --apple-id <apple-id> --team-id 2C39YHVFA2`. The app bundles its own license and those of VLCKit and Inter in `Contents/Resources/Licenses`.
 

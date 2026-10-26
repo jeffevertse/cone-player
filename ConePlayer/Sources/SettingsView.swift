@@ -293,9 +293,49 @@ private struct InterfacePane: View {
                 SegmentedValues(selection: $settings.libraryLayout, options: SettingsStore.LibraryLayout.allCases) { $0.rawValue }
             }
         }
+        SettingsSection("Updates") {
+            UpdatesRows()
+        }
         SettingsSection("Player") {
             SettingsRow("Show miniplayer while browsing", info: "Keeps what's playing visible in the corner of the library.") {
                 OnOffToggle(isOn: $settings.showsMiniplayer, label: "Show miniplayer while browsing")
+            }
+        }
+    }
+}
+
+/// Settings › Interface › Updates: version, last check, automatic checks, Check Now.
+private struct UpdatesRows: View {
+    @Environment(UpdateController.self) private var updates
+
+    var body: some View {
+        @Bindable var updates = updates
+        SettingsRow("Version", info: "Cone Player checks a signed update feed and asks before installing.") {
+            Text(UpdateController.versionDescription)
+                .monospacedDigit()
+                .foregroundStyle(Theme.textPrimary)
+        }
+        if updates.isAvailable {
+            SettingsRow("Check automatically", info: "Looks for a new version once a day.") {
+                OnOffToggle(isOn: $updates.automaticallyChecksForUpdates, label: "Check for updates automatically")
+                    .accessibilityIdentifier("settings.updates.automatic")
+            }
+            SettingsRow("Last checked", info: "When Cone Player last looked for a new version.") {
+                HStack(spacing: 14) {
+                    Text(updates.lastUpdateCheckDate.map { $0.formatted(.relative(presentation: .named)) } ?? "Never")
+                        .foregroundStyle(Theme.textMuted)
+                    Button("Check Now") { updates.checkForUpdates() }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(updates.canCheckForUpdates ? Theme.accentText : Theme.textMuted)
+                        .focusEffectDisabled()
+                        .disabled(!updates.canCheckForUpdates)
+                }
+            }
+        } else {
+            SettingsRow("Updates", info: "Turned off while testing.") {
+                Text("Off")
+                    .foregroundStyle(Theme.textMuted)
+                    .accessibilityIdentifier("settings.updates.off")
             }
         }
     }

@@ -5,6 +5,9 @@ options:
     macOS: "15.0"
   createIntermediateGroups: true
 packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: 2.9.4
   VLCKit:
     url: https://code.videolan.org/videolan/VLCKit.git
     exactVersion: 4.0.0-a25
@@ -34,6 +37,7 @@ targets:
         buildPhase: resources
     dependencies:
       - package: VLCKit
+      - package: Sparkle
     info:
       path: ConePlayer/Info.plist
       properties:
@@ -41,6 +45,16 @@ targets:
         # Read from the build settings above, so a version bump only touches one place.
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # In-app updates (Sparkle): a signed feed on the public cone-player-releases
+        # Pages site. Checks daily and asks before installing.
+        SUFeedURL: https://jeffevertse.github.io/cone-player-releases/appcast.xml
+        SUPublicEDKey: 4g0dPV0TeX3k8i8uofjDFQ/tHJKlgEwHH2p6mlnjPfU=
+        SUEnableAutomaticChecks: true
+        SUScheduledCheckInterval: 86400
+        SUAllowsAutomaticUpdates: true
+        SUAutomaticallyUpdate: false
+        # Sandboxed apps install updates through Sparkle's installer service.
+        SUEnableInstallerLauncherService: true
         NSHumanReadableCopyright: "© 2026 Jeff Evertse. GPL-3.0-or-later. Uses VLCKit (LGPL) and Inter (OFL); see Contents/Resources/Licenses."
         ATSApplicationFontsPath: Fonts
         NSLocalNetworkUsageDescription: Cone Player looks for media servers and shared folders on your network so you can play their videos and music.
@@ -64,6 +78,10 @@ targets:
         # UPnP discovery listens for replies from media servers.
         com.apple.security.network.server: true
         com.apple.security.cs.disable-library-validation: true
+        # Lets the sandboxed app talk to Sparkle's installer service.
+        com.apple.security.temporary-exception.mach-lookup.global-name:
+          - $(PRODUCT_BUNDLE_IDENTIFIER)-spks
+          - $(PRODUCT_BUNDLE_IDENTIFIER)-spki
   ConePlayerTests:
     type: bundle.unit-test
     platform: macOS
