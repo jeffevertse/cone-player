@@ -14,8 +14,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "0.2.0"
-    CURRENT_PROJECT_VERSION: "6"
+    MARKETING_VERSION: "0.2.1"
+    CURRENT_PROJECT_VERSION: "7"
     # A stable signing identity lets macOS remember privacy permissions between builds.
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     CODE_SIGN_IDENTITY: Apple Development
@@ -41,6 +41,7 @@ targets:
     info:
       path: ConePlayer/Info.plist
       properties:
+        CFBundleName: Cone Player
         CFBundleDisplayName: Cone Player
         # Read from the build settings above, so a version bump only touches one place.
         CFBundleShortVersionString: $(MARKETING_VERSION)
