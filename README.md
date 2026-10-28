@@ -65,7 +65,7 @@ The icon is vector artwork in `design/icon/`: `ConePlayerIcon.svg` (the app icon
 
 ### Updates
 
-Cone Player updates itself with [Sparkle](https://sparkle-project.org): it checks once a day (Settings › Interface › Updates) and asks before installing, and *Cone Player › Check for Updates…* checks right away. The update feed and DMGs are published on the public [cone-player-releases](https://github.com/jeffevertse/cone-player-releases) GitHub Pages site and signed with an EdDSA key kept in the maintainer's Keychain (account `cone-player`).
+Cone Player updates itself with [Sparkle](https://sparkle-project.org): it checks once a day (Settings › Updates) and asks before installing, and *Cone Player › Check for Updates…* checks right away. The update feed and DMGs are published on the public [cone-player-releases](https://github.com/jeffevertse/cone-player-releases) GitHub Pages site and signed with an EdDSA key kept in the maintainer's Keychain (account `cone-player`).
 
 ### Releasing
 

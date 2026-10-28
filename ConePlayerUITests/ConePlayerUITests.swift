@@ -86,5 +86,10 @@ final class ConePlayerUITests: XCTestCase {
 
         element("settings.Audio").click()
         XCTAssertTrue(element("settings.volume.follows").waitForExistence(timeout: 3), "Volume section missing in Audio")
+
+        // Updates has its own pane; the updater is off in UI tests.
+        element("settings.Updates").click()
+        XCTAssertEqual(title.value as? String ?? title.label, "Updates")
+        XCTAssertTrue(element("settings.updates.off").waitForExistence(timeout: 3), "Updates pane missing")
     }
 }

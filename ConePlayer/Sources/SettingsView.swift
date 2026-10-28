@@ -6,6 +6,7 @@ struct SettingsView: View {
         case interface = "Interface"
         case privacy = "Privacy"
         case controls = "Controls"
+        case updates = "Updates"
         case playback = "Playback"
         case video = "Video"
         case audio = "Audio"
@@ -20,7 +21,7 @@ struct SettingsView: View {
         /// Sidebar group, as in the Figma: App, Media, System.
         var group: String {
             switch self {
-            case .interface, .privacy, .controls: "App"
+            case .interface, .privacy, .controls, .updates: "App"
             case .playback, .video, .audio, .subtitles, .library: "Media"
             case .network, .performance, .recording: "System"
             }
@@ -31,6 +32,7 @@ struct SettingsView: View {
             case .interface: "Interface"
             case .privacy: "Privacy"
             case .controls: "Keyboard Shortcuts"
+            case .updates: "Updates"
             case .library: "Library"
             case .performance: "Performance"
             case .recording: "Recording"
@@ -47,6 +49,7 @@ struct SettingsView: View {
             case .interface: "cursorarrow"
             case .privacy: "hand.raised"
             case .controls: "keyboard"
+            case .updates: "arrow.triangle.2.circlepath"
             case .library: "folder"
             case .performance: "gauge.with.dots.needle.67percent"
             case .recording: "record.circle"
@@ -84,6 +87,7 @@ struct SettingsView: View {
                         case .interface: InterfacePane()
                         case .privacy: PrivacyPane()
                         case .controls: ControlsPane()
+                        case .updates: UpdatesPane()
                         case .library: LibraryPane()
                         case .performance: PerformancePane()
                         case .recording: RecordingPane()
@@ -293,9 +297,6 @@ private struct InterfacePane: View {
                 SegmentedValues(selection: $settings.libraryLayout, options: SettingsStore.LibraryLayout.allCases) { $0.rawValue }
             }
         }
-        SettingsSection("Updates") {
-            UpdatesRows()
-        }
         SettingsSection("Player") {
             SettingsRow("Show miniplayer while browsing", info: "Keeps what's playing visible in the corner of the library.") {
                 OnOffToggle(isOn: $settings.showsMiniplayer, label: "Show miniplayer while browsing")
@@ -304,38 +305,41 @@ private struct InterfacePane: View {
     }
 }
 
-/// Settings › Interface › Updates: version, last check, automatic checks, Check Now.
-private struct UpdatesRows: View {
+/// Settings › Updates: version, last check, automatic checks, Check for Updates.
+private struct UpdatesPane: View {
     @Environment(UpdateController.self) private var updates
 
     var body: some View {
         @Bindable var updates = updates
-        SettingsRow("Version", info: "Cone Player checks a signed update feed and asks before installing.") {
-            Text(UpdateController.versionDescription)
-                .monospacedDigit()
-                .foregroundStyle(Theme.textPrimary)
-        }
-        if updates.isAvailable {
-            SettingsRow("Check automatically", info: "Looks for a new version once a day.") {
-                OnOffToggle(isOn: $updates.automaticallyChecksForUpdates, label: "Check for updates automatically")
-                    .accessibilityIdentifier("settings.updates.automatic")
+        SettingsSection("Updates") {
+            SettingsRow("Version", info: "Cone Player checks a signed update feed and asks before installing.") {
+                Text(UpdateController.versionDescription)
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.textPrimary)
             }
-            SettingsRow("Last checked", info: "When Cone Player last looked for a new version.") {
-                HStack(spacing: 14) {
-                    Text(updates.lastUpdateCheckDate.map { $0.formatted(.relative(presentation: .named)) } ?? "Never")
-                        .foregroundStyle(Theme.textMuted)
-                    Button("Check Now") { updates.checkForUpdates() }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(updates.canCheckForUpdates ? Theme.accentText : Theme.textMuted)
-                        .focusEffectDisabled()
-                        .disabled(!updates.canCheckForUpdates)
+            if updates.isAvailable {
+                SettingsRow("Check automatically", info: "Looks for a new version once a day.") {
+                    OnOffToggle(isOn: $updates.automaticallyChecksForUpdates, label: "Check for updates automatically")
+                        .accessibilityIdentifier("settings.updates.automatic")
                 }
-            }
-        } else {
-            SettingsRow("Updates", info: "Turned off while testing.") {
-                Text("Off")
-                    .foregroundStyle(Theme.textMuted)
-                    .accessibilityIdentifier("settings.updates.off")
+                SettingsRow("Last checked", info: "When Cone Player last looked for a new version.") {
+                    HStack(spacing: 14) {
+                        Text(updates.lastUpdateCheckDate.map { $0.formatted(.relative(presentation: .named)) } ?? "Never")
+                            .foregroundStyle(Theme.textMuted)
+                        Button("Check for Updates…") { updates.checkForUpdates() }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(updates.canCheckForUpdates ? Theme.accentText : Theme.textMuted)
+                            .focusEffectDisabled()
+                            .disabled(!updates.canCheckForUpdates)
+                            .accessibilityIdentifier("settings.updates.check")
+                    }
+                }
+            } else {
+                SettingsRow("Updates", info: "Turned off while testing.") {
+                    Text("Off")
+                        .foregroundStyle(Theme.textMuted)
+                        .accessibilityIdentifier("settings.updates.off")
+                }
             }
         }
     }
